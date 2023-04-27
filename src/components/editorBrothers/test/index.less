@@ -1,0 +1,56 @@
+.container {
+  height: 100%;
+  box-sizing: border-box;
+  padding-right: 0px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 15px;
+  border-top-left-radius: 0px;
+  overflow: scroll;
+  max-height: 95vh;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  position: relative;
+
+  .model {
+    .modelName {
+      color: gray;
+
+      cursor: pointer;
+    }
+  }
+}
+
+.testButton {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.control {
+  color: #bdc0ba;
+  user-select: none;
+  background: none;
+  border: none;
+  font-size: 15px;
+  display: inline-flex;
+  margin-right: 6px;
+  margin-left: 3px;
+}
+
+.control:hover {
+  color: black;
+}
+
+.dragOverlay {
+  display: flex;
+  // padding: 10px 0;
+  // border: 1px solid #bdc0ba;
+  border-radius: 10px;
+}
+
+.testContainer {
+  display: flex;
+
+  .itemContainer {
+    width: 50%;
+  }
+}

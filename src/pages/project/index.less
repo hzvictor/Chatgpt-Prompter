@@ -1,0 +1,36 @@
+.cover {
+  width: 300px;
+  height: 200px;
+  overflow: hidden;
+  border: white;
+  border-top-right-radius: 8px;
+  border-top-left-radius: 8px;
+}
+
+.projectContainer{
+  box-sizing: border-box;
+  padding: 30px;
+  height:calc(100vh - 64px);
+  overflow: scroll;
+  .cardContainer{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 360px);
+    justify-items:center;
+    grid-row-gap: 39px;
+  }
+}
+
+// :global(.ant-card) {
+//     border-top: 1px solid white;
+//     border-left: 1px solid white;
+//     border-right: 1px solid white
+// }
+// :global(.ant-card-body) {
+//     border-left:1px solid #f0f0f0;
+//     border-right:1px solid #f0f0f0;
+//     border-radius:0 0 0 0 !important;
+// }
+// :global(.ant-card-actions) {
+//     border-left:1px solid #f0f0f0;
+//     border-right:1px solid #f0f0f0;
+// }

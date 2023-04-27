@@ -1,0 +1,71 @@
+@bg-color: #eaecf0;
+@main-color: #00aa90; //same to the main color//#5080ef;
+@nav-item-width: 100px;
+@nav-item-height: 32px;
+@nav-item-border-width: 4px;
+
+.container {
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: @bg-color;
+}
+
+.nav {
+  position: relative;
+  background: white;
+  border-radius: 24px;
+  font-size: 0;
+  padding: @nav-item-border-width;
+  z-index: 1;
+}
+
+.nav-item {
+  width: @nav-item-width;
+  height: @nav-item-height;
+  font-size: 14px;
+  color: @main-color;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav > input[type='radio'] {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.nav > input[type='radio']:checked + label {
+  color: white;
+}
+
+.tracker {
+  width: @nav-item-width;
+  height: @nav-item-height;
+  background: @main-color;
+  z-index: -1;
+  position: absolute;
+  left: @nav-item-border-width;
+  top: @nav-item-border-width;
+  border-radius: 24px;
+  transition: transform 0.3s ease-in-out;
+}
+
+#nav-item-opt-1:checked ~ .tracker {
+  transform: translateX(calc(@nav-item-width));
+}
+
+#nav-item-opt-2:checked ~ .tracker {
+  transform: translateX(calc(@nav-item-width * 2));
+}
+
+#nav-item-opt-3:checked ~ .tracker {
+  transform: translateX(calc(@nav-item-width * 3));
+}

@@ -1,0 +1,9 @@
+
+.react-grid-item  .ant-tabs-nav{
+    margin-bottom: 10px !important;
+    min-width: 80px;
+}
+.react-grid-item  .ant-tabs-nav .ant-tabs-tab{
+    padding: 3px 13px !important;
+    min-width: 80px;
+}

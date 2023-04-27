@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([[6],{"67Jw":function(n,t,i){"use strict";i.r(t);i("tW4V"),i("oidH");var o=i("nKUr"),r=n=>{var t=n.children;n.location,n.history;return Object(o["jsx"])(o["Fragment"],{children:t})};t["default"]=r},oidH:function(n,t,i){},tW4V:function(n,t,i){}}]);

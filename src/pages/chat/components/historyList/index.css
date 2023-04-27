@@ -1,0 +1,10 @@
+.chatListContainer .ant-list-item-meta-title {
+    margin-top: 0 !important;
+}
+
+.chatListContainer .ant-list-item-meta-description {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 80%;
+}

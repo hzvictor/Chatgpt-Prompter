@@ -1,0 +1,42 @@
+/* *{
+    caret-color: var(--brand-2);
+} */
+
+/* ::selection {
+    background:rgba(0,170,144, .5); 
+    color:#555;
+} */
+body{
+    margin: 0 !important;
+}
+.ant-layout{
+    background-color: rgba(169, 180, 202);
+}
+
+*:focus-visible {
+    outline: none !important;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+    /* Chrome Safari */
+}
+
+.react-grid-item.react-grid-placeholder {
+    background-color: #00aa90 !important;
+}
+
+
+.ant-drawer-content-wrapper .ant-col-12 .ant-table-tbody tr:first-child {
+    box-shadow: #00aa90 0px 0px 0px 5px inset;
+    /* background-color: aqua; */
+}
+
+.tableContainer .ant-table-tbody tr:first-child {
+    box-shadow: #00aa90 0px 0px 0px 5px inset;
+    /* background-color: aqua; */
+}
+
+.react-grid-item .ant-table-wrapper {
+    height: 0;
+}

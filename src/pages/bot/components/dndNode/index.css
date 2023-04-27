@@ -1,0 +1,14 @@
+.x6-widget-stencil{
+    background-color: white;
+    
+}
+.x6-widget-stencil-title{
+    background: none;
+    color: #00aa90;
+    font-size: 19px;
+}
+.x6-widget-stencil-group .x6-widget-stencil-group-title{
+    background: none;
+    color: #00aa90;
+    font-size: 16px;
+}

@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([[7],{"i6+/":function(n,c,a){"use strict";a.r(c);var e=a("nKUr"),i="ncDR";c["default"]=()=>Object(e["jsx"])("div",{_nk:"".concat(i,"11"),children:"I am a customized 404 page"})}}]);
