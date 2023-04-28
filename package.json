@@ -29,6 +29,7 @@
     "@emotion/css": "^11.10.6",
     "ace-builds": "^1.16.0",
     "antd": "^5.3.3",
+    "antd-img-crop": "^4.12.2",
     "dayjs": "^1.11.7",
     "dexie": "^3.2.3",
     "nanoid": "^4.0.2",

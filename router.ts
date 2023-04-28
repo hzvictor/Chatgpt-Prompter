@@ -5,10 +5,10 @@ export default [
     routes: [
       { exact: false, path: '/chat/:projectid', component: '@/pages/chat/index' },
       { exact: false, path: '/chat', component: '@/pages/chat/index' },
-      { exact: false, path: '/mobile/chat/:projectid', component: '@/pages/chat/mobile/index' },
-      { exact: false, path: '/mobile/chat', component: '@/pages/chat/mobile/index' },
-      { path: '/editor/chat/3.5/prompt/:projectid', component: '@/pages/editor/index' },
-      { path: '/editor/chat/3.5/graph/:projectid', component: '@/pages/bot/index' },
+      // { exact: false, path: '/mobile/chat/:projectid', component: '@/pages/chat/mobile/index' },
+      // { exact: false, path: '/mobile/chat', component: '@/pages/chat/mobile/index' },
+      { path: '/editor/chatbot/turbo/:projectid', component: '@/pages/editors/chatbot/turbo/index' },
+      // { path: '/editor/chatbot/turbo/graph/:projectid', component: '@/pages/bot/index' },
       {
         path: '/',
         component: '@/layouts/basic/index',

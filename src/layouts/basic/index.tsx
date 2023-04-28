@@ -13,10 +13,8 @@ import { Switch } from 'react-router';
 import { messageFunction, upOrLeftState } from '@/stores/globalFunction';
 import Dexie from 'dexie';
 import Login from '@/components/login'
-import { userState } from '@/stores/user'
-import { useSnapshot } from 'valtio';
 import DiscordSvg from '../../../public/assets/imgs/discord.svg'
-
+import { connect } from 'umi';
 
 const items = [
   {
@@ -45,16 +43,19 @@ const items = [
   },
 ];
 
-export default function IndexPage({ children, location, history }: any) {
+
+function IndexPage({ children, location, history, user,dispatch }: any) {
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clicked, setClicked] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const snapUserState = useSnapshot(userState)
-  const [selectedKeys,setSelectedKeys] = useState(['store'])
+  const [selectedKeys,setSelectedKeys] = useState([])
   messageFunction.messageApi = messageApi;
   const { formatMessage } = useIntl();
   const [lang, setLang] = useState('English');
+
+  const { info} = user
+
 
   useEffect(() => {
     if (getLocale() == 'zh-CN') {
@@ -63,6 +64,7 @@ export default function IndexPage({ children, location, history }: any) {
       setLang('English');
     }
 
+    setSelectedKeys(history.location.pathname.split('/')[1])
     // upOrLeftState.lastLocation = history.location.pathname
   }, []);
 
@@ -81,7 +83,7 @@ export default function IndexPage({ children, location, history }: any) {
     localStorage.clear();
 
     // 定义数据库
-    const db = new Dexie('promptDB');
+    const db = new Dexie('prompter');
 
     // // 定义表
     // db.version(1).stores({
@@ -140,9 +142,13 @@ export default function IndexPage({ children, location, history }: any) {
   };
 
   const logout = () => {
-    userState.jwt = ''
-    userState.username = ''
-    userState.islogin = false
+    // userState.jwt = ''
+    // userState.username = ''
+    // userState.islogin = false
+    dispatch({
+      type: 'user/logout',
+    })
+
     messageApi.info('Logout will not clear local data')
   }
 
@@ -203,11 +209,11 @@ export default function IndexPage({ children, location, history }: any) {
                       <Button onClick={changeLang} shape="round" size="middle">
                         {lang}
                       </Button>
-                      {snapUserState.islogin ?
+                      {info.islogin ?
                         <Popover
                           style={{ width: 500 }}
                           content={hoverContent}
-                          title={snapUserState.username}
+                          title={info.username}
                           trigger="hover"
                           open={hovered}
                           onOpenChange={handleHoverChange}
@@ -218,17 +224,16 @@ export default function IndexPage({ children, location, history }: any) {
                                 {hoverContent}
                               </div>
                             }
-                            title={snapUserState.username}
+                            title={info.username}
                             trigger="click"
                             open={clicked}
                             onOpenChange={handleClickChange}
                           >
                             <div>
-                              <Avatar name={snapUserState.username} size="30" round={true} />
+                              <Avatar name={info.username} size="30" round={true} />
                             </div>
                           </Popover>
                         </Popover>
-
                         : <Tooltip title="Login"> <Button onClick={showModal} shape="circle" icon={<LoginOutlined />} ></Button>  </Tooltip>}
                     </Space>
                   </Col>
@@ -278,6 +283,10 @@ export default function IndexPage({ children, location, history }: any) {
     </>
   );
 }
+
+export default connect(({ user }) => ({
+  user
+}))(IndexPage) 
 
 
 // {history.location.pathname != '/boteditor'

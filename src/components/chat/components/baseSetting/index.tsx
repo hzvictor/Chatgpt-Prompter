@@ -13,7 +13,6 @@ import {
   Space,
   Upload,
 } from 'antd';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 const { Option } = Select;
 import { subscribe, useSnapshot } from 'valtio';
 import botStore from '@/stores//bot';

@@ -4,26 +4,33 @@ import { Avatar, Button, Checkbox, Tabs, Form, Input } from 'antd';
 import { register, login } from '@/services/user'
 import { userState } from '@/stores/user'
 import { useState } from 'react';
+import { connect } from 'umi';
 import styles from './index.less'
 // const backendUrl = 'https://test.server.prompterhub.com';
-export default ({ onCancel }: any) => {
-    const [loading, setLoading] = useState(false)
+export default connect(({ user }) => ({
+    user
+}))(({ onCancel, dispatch, loading }: any) => {
+    // const [loading, setLoading] = useState(false)
 
     const onFinish = (values: any) => {
-        setLoading(true)
-        if(!values.email){
-            login(values).then(res => {
-                setLoading(false)
-                if (res.jwt) {
-                    userState.jwt = `Bearer ${res.jwt}`
-                    userState.islogin = true
-                    userState.username = res.user.username
-                    onCancel()
-                }
+        if (!values.email) {
+            dispatch({
+                type: 'user/login',
+                payload: values,
+            }).then((res:any)=>{
+                onCancel()
             })
-        }else{
+            // login(values).then(res => {
+            //     setLoading(false)
+            //     if (res.jwt) {
+            //         userState.jwt = `Bearer ${res.jwt}`
+            //         userState.islogin = true
+            //         userState.username = res.user.username
+            //         onCancel()
+            //     }
+            // })
+        } else {
             register(values).then(res => {
-                setLoading(false)
                 if (res.jwt) {
                     userState.jwt = `Bearer ${res.jwt}`
                     userState.islogin = true
@@ -135,5 +142,5 @@ export default ({ onCancel }: any) => {
             <p className={styles.loginButtonName} >Login with Discord</p>
         </a> */}
     </>
-}
+})
 

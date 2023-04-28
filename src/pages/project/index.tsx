@@ -1,32 +1,27 @@
 import styles from './index.less';
-import { Button, Space, message, Card, Popconfirm } from 'antd';
+import { Button, Modal, message, Card, Popconfirm } from 'antd';
 import { useSnapshot } from 'valtio';
 import {
   EditOutlined,
   DeleteOutlined,
   SettingOutlined,
   BranchesOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { Transforms, Editor } from 'slate';
-import { getAllProjectListDB } from '@/database/project';
+
+import { getAllProjectList,deleteProject } from '@/database/prompter/project';
 import Jazzicon from 'react-jazzicon';
 const { Meta } = Card;
 import { history, useModel } from 'umi';
 import dayjs from 'dayjs';
-import { getTargetOperations } from '@/database/operation';
-import { getTargetProgectInfo, deleteProjectDB } from '@/database/root';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { activeProject, changeActiveProjectID } from '@/stores/project';
-import { editors } from '@/stores/editors';
-import { updateAllState } from '@/stores/index';
+import NewProject from './components/newProject'
 import { messageFunction } from '@/stores/globalFunction';
 dayjs.extend(relativeTime);
 const deleteText = 'Are you sure to delete this project';
 const deleteDescription = 'cannot be restored after deletion.';
 
-const editText = 'Do you need to switch editing items';
-const editDescription = 'The current project is automatically saved';
 
 export default ({
   showChildrenLogDrawer,
@@ -35,39 +30,27 @@ export default ({
   open,
   onClose,
 }: any) => {
-  const { activeProjectID } = useSnapshot(activeProject);
   const messageApi = messageFunction.messageApi;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const confirmDelete = (nanoid: string) => {
+  const [ projectInfo, SetProjectInfo ] =useState({})
+
+  const confirmDelete = async (nanoid: string) => {
     // message.info('Clicked on Yes.');
-    if (activeProjectID == nanoid) {
-      messageApi.open({
-        type: 'warning',
-        content: 'Cannot delete the item being operated on',
-      });
-    } else {
-      deleteProjectDB(nanoid).then((res) => {
-        if (res) {
-          messageApi.info('Delete success');
-          getAllProjectListDB().then((arr) => {
-            setList(arr);
-          });
-        }
-      });
-    }
+    await deleteProject(nanoid)
+    getAllProjectList().then((arr) => {
+      setList(arr);
+    });
   };
 
 
-  const confirmEdit = async (nanoid: string) => {
 
-  };
 
-  const confirmEditWrap = async (nanoid: string) => {
+  const confirmEditWrap = async (item: any) => {
     try {
-      await confirmEdit(nanoid);
-      history.push('/editor/chat/3.5/prompt');
+      history.push(`/editor/${item.type}/${item.model}/${item.nanoid}`);
     } catch (error) {
-      activeProject.globalState = 1;
+
       // onClose();
       console.log(error)
       messageApi.info('Change error');
@@ -77,7 +60,7 @@ export default ({
   const [list, setList] = useState([]);
 
   useEffect(() => {
-    getAllProjectListDB().then((arr) => {
+    getAllProjectList().then((arr) => {
       setList(arr);
     });
   }, [open, childrenDetailDrawer]);
@@ -97,9 +80,35 @@ export default ({
     return parseInt(decimal);
   }
 
+  const showModal = (item:any) => {
+    SetProjectInfo(item)
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    getAllProjectList().then((arr) => {
+      setList(arr);
+    });
+  };
+
   return (
     <div className={styles.projectContainer}>
       <div className={styles.cardContainer} >
+        <Card
+          hoverable
+          style={{ width: "300px", height: "389px" }}
+          onClick={()=>{showModal({})}}
+        >
+          <div className={styles.newContainer}>
+            <PlusOutlined />
+            <div className={styles.newText}> Add New Project </div>
+          </div>
+        </Card>
         {list?.map((item: any, index) => {
           return (
             <Card
@@ -112,23 +121,21 @@ export default ({
               // }}
               cover={
                 <div className={styles.cover}>
-                  <Jazzicon
-                    diameter={300}
-                    paperStyles={{ marginTop: '-55px' }}
-                    seed={textToDecimal(item.nanoid)}
-                  />
+                  {
+                    item.cover ? <img alt="example" style={{width:"300px",height:"200px"}} src={item.cover} /> : <Jazzicon
+                      diameter={300}
+                      paperStyles={{ marginTop: '-55px' }}
+                      seed={textToDecimal(item.nanoid)}
+                    />
+                  }
                 </div>
               }
               actions={[
-                <EditOutlined key="edit" onClick={() => { confirmEditWrap(item.nanoid) }} />,
-                <BranchesOutlined
-                  key="branches"
-                  onClick={showChildrenLogDrawer}
-                />,
+                <EditOutlined key="edit" onClick={() => { confirmEditWrap(item) }} />,
                 <SettingOutlined
                   key="setting"
                   onClick={() => {
-                    showChildrenDetailDrawer(item);
+                    showModal(item);
                   }}
                 />,
                 <Popconfirm
@@ -153,7 +160,8 @@ export default ({
                 title={item.name}
                 description={
                   <>
-                    <div>{item.descripe != '' ? item.descripe : '...'}</div>
+                    <div className={styles.type} >{item.type} / {item.model}</div>
+                    <div  className={styles.describe} >{item.describe != '' ? item.describe : '...'}</div>
                     <div>{dayjs(item.creatData).fromNow()}</div>
                   </>
                 }
@@ -162,6 +170,9 @@ export default ({
           );
         })}
       </div>
+      <Modal destroyOnClose={true} title="Project Setting" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={null} >
+        <NewProject onCancel={handleCancel} projectInfo={projectInfo} ></NewProject>
+      </Modal>
     </div>
   );
 };
