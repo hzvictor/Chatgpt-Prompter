@@ -1,6 +1,5 @@
 import { extend } from 'umi-request';
 import { notification } from 'antd';
-import { userState } from '@/stores/user'
 
 const codeMessage = {
   200: 'The server has successfully returned the requested data.',
@@ -58,11 +57,19 @@ const request = extend({
 // 中间件，对请求前添加 userId token 的基础参数
 request.interceptors.request.use((url, options) => {
   const newOptions = { ...options };
-
-  const headers = userState.jwt ? {
+  let user = {
+    info:{
+      jwt:''
+    }
+  }
+  const userString = JSON.parse(localStorage.getItem('persist:root'))?.user
+  if(userString) {
+    user =  JSON.parse(userString)
+  }
+  const headers = user.info.jwt != '' ? {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    Authorization: userState.jwt
+    Authorization: 'Bearer ' + user.info.jwt
   } : {
     'Content-Type': 'application/json',
     Accept: 'application/json',

@@ -9,7 +9,10 @@ export default defineConfig({
   fastRefresh: {},
   exportStatic: {},
   links: [{ rel: 'icon', href: '/favicon.ico' }],
-  dva: {},
+  dva: {
+    immer: true,
+    hmr: true,
+  },
   locale: {
     default: 'en-US',
     antd: true,

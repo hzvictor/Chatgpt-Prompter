@@ -515,7 +515,7 @@ export default function IndexPage() {
         },
       }}
     >
-      <div className={styles.chatContainer}>
+      <div  className={`componentContainer  ${styles.chatContainer}`}>
         <div className={styles.chatBoxWrap}>
           <Chat
             renderNavbar={() => <ChatHeader></ChatHeader>}

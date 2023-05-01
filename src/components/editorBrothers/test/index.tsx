@@ -287,7 +287,7 @@ export default function App() {
         },
       }}
     >
-      <div className={styles.container}>
+      <div  className={`componentContainer  ${styles.container}`}>
         <Row>
           {/* <Col className={styles.headerTitle} span={5} > Parameter</Col> */}
           <Col span={24}>

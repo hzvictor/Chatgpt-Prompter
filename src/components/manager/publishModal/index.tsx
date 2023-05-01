@@ -45,21 +45,21 @@ export default () => {
 
     useEffect(() => {
         setIsLoading(true)
-        getChatbotByProjectid(activeProject.activeProjectID).then((res: any) => {
+        getChatbotByProjectid('11111111').then((res: any) => {
             console.log(res)
-            setIsLoading(false)
-            if (res.data && res.data.length > 0 ) {
-                setIsShowUpdateBot(true)
-                form.setFieldsValue(res.data[0].chatbot)
-                setChatbotId(res.data[0].chatbot.id)
-                if (JSON.stringify(res.data[0].chatbot.is_with_key)) {
-                    if (res.data[0].chatbot.is_with_key) {
-                        setIsShowSelectKey(true)
-                    } else {
-                        setIsShowSelectKey(false)
-                    }
-                }
-            }
+            // setIsLoading(false)
+            // if (res.data && res.data.length > 0 ) {
+            //     setIsShowUpdateBot(true)
+            //     form.setFieldsValue(res.data[0].chatbot)
+            //     setChatbotId(res.data[0].chatbot.id)
+            //     if (JSON.stringify(res.data[0].chatbot.is_with_key)) {
+            //         if (res.data[0].chatbot.is_with_key) {
+            //             setIsShowSelectKey(true)
+            //         } else {
+            //             setIsShowSelectKey(false)
+            //         }
+            //     }
+            // }
         })
     }, [])
 

@@ -61,21 +61,7 @@ const App: React.FC = ({ showDrawer }: any) => {
     botStore.botState.strategy = val
   }
 
-  // useEffect(()=>{
-  //   subscribe(activeProject,()=>{
-  //     botStore.botState.name = '';
-  //   })
-  // },[])
 
-  // const [open, setOpen] = useState(false);
-
-  // const showDrawer = () => {
-  //     setOpen(true);
-  // };
-
-  // const onClose = () => {
-  //     setOpen(false);
-  // };
 
 
   return (

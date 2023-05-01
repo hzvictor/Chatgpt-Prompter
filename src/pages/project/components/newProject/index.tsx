@@ -36,9 +36,12 @@ const App: React.FC = ({ onCancel, projectInfo }: any) => {
     const onFinish = async (info: any) => {
         console.log('Success:', info);
         if (projectInfo.type) {
-            await updateProjectDetail(projectInfo.nanoid, { ...info, cover: imgUrl })
+            await updateProjectDetail({
+                nanoid: projectInfo.nanoid,
+                data: { ...info, cover: imgUrl }
+            })
         } else {
-            await newProject(info.name, info.describe, imgUrl, info.type,info.model)
+            await newProject(info.name, info.describe, imgUrl, info.type, info.model)
 
         }
         onCancel()

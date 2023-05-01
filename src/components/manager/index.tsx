@@ -2,31 +2,19 @@ import styles from './index.less';
 import {
   Button,
   Space,
-  message,
-  Drawer,
   Modal,
   Tour,
-  Input,
-  Row,
-  Col,
 } from 'antd';
-import { Transforms, Editor } from 'slate';
-import ProjectList from '../apureComponents/projectList';
-import LogList from '@/components/apureComponents/logList';
 import { makeNodeId } from '@/utils/withNodeId';
-import { useModel } from 'umi';
+import { history, useModel } from 'umi';
 import { useState, useRef } from 'react';
 import type { TourProps } from 'antd';
-import { updateProjectDetailDB } from '@/database/project';
-import { addNewProgect } from '@/database/root';
-import { resetAllState } from '@/stores/index';
-import { activeProject, changeActiveProjectID } from '@/stores/project';
-import { editors } from '@/stores/editors';
 import { messageFunction } from '@/stores/globalFunction';
 import { RedoOutlined } from '@ant-design/icons';
 import { editorLayout } from '@/stores/editors';
 import KeyTable from './keysTable'
 import PublishModal from './publishModal';
+import Setting from './setting'
 const layoutGrid = [
   { w: 13, h: 24, x: 5, y: 0, i: 'conversation', moved: false, static: false },
   { w: 5, h: 8, x: 0, y: 2, i: 'system', moved: false, static: false },
@@ -38,20 +26,12 @@ const layoutGrid = [
   { w: 6, h: 11, x: 18, y: 19, i: 'test', moved: false, static: false },
 ];
 
-const { TextArea } = Input;
-export default function IndexPage() {
-  const messageApi = messageFunction.messageApi;
-  const [open, setOpen] = useState(false);
+export default function IndexPage({projectid}:any) {
   const [openGuid, setOpenGuid] = useState<boolean>(false);
-  const [childrenLogDrawer, setChildrenLogDrawer] = useState(false);
-  const [childrenDetailDrawer, setChildrenDetailDrawer] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isKeysModalOpen, setIsKeysModalOpen] = useState(false);
-  const [isNewProjectModalOpen, setisNewProjectModalOpen] = useState(false);
-  const [projecctName, setProjecctName] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [activeItem, setActiveItem] = useState<Object>({});
+  const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
   const ref1 = useRef(null);
   const ref2 = useRef(null);
   const ref3 = useRef(null);
@@ -80,142 +60,44 @@ export default function IndexPage() {
     },
   ];
 
-  const newProject = (projectName: string, description: string) => {
-    activeProject.globalState = 0;
 
-    const systemStartNode = Editor.start(editors.system, []);
-    const systemEndNode = Editor.end(editors.system, []);
-    const conversationStartNode = Editor.start(editors.conversation, []);
-    const conversationEndNode = Editor.end(editors.conversation, []);
-    const testStartNode = Editor.start(editors.test, []);
-    const testEndNode = Editor.end(editors.test, []);
 
-    const id = makeNodeId();
-    const initTabId = makeNodeId();
-    changeActiveProjectID(id);
-    // add to database
-    addNewProgect(id, projectName, description, initTabId);
 
-    Transforms.delete(editors.system, {
-      at: {
-        anchor: systemStartNode,
-        focus: systemEndNode,
-      },
-    });
 
-    Transforms.delete(editors.conversation, {
-      at: {
-        anchor: conversationStartNode,
-        focus: conversationEndNode,
-      },
-    });
 
-    Transforms.delete(editors.test, {
-      at: {
-        anchor: testStartNode,
-        focus: testEndNode,
-      },
-    });
-
-    Transforms.setNodes(
-      editors.conversation,
-      { id: makeNodeId(), role: 'user', children: [{text:''}] },
-      {
-        at:[0]
-      },
-    );
-    Transforms.setNodes(
-      editors.system,
-      { id: makeNodeId(), role: 'system', children: [{text:''}] },
-      {
-        at:[0]
-      },
-    );
-    Transforms.setNodes(
-      editors.test,
-      { id: makeNodeId(), role: 'test', children: [{text:''}] },
-      {
-        at:[0]
-      },
-    );
-
-    editors.system.history = {
-      redos: [],
-      undos: [],
-    };
-    editors.conversation.history = {
-      redos: [],
-      undos: [],
-    };
-    editors.test.history = {
-      redos: [],
-      undos: [],
-    };
-    
-    resetAllState(initTabId);
-
-    activeProject.globalState = 1;
-  };
-
-  const newProjectWrap = (projectName: string, description: string) => {
-    try {
-      newProject(projectName, description);
-    } catch (error) {
-      console.log(error,1111)
-      messageApi.info('Abnormal operation, new failed');
-    }
-  };
-
-  const showDrawer = () => {
-    setOpen(true);
-  };
-
-  const onClose = () => {
-    setOpen(false);
-  };
-
-  const showChildrenLogDrawer = () => {
-    setChildrenLogDrawer(true);
-  };
-
-  const onChildrenLogDrawerClose = () => {
-    setChildrenLogDrawer(false);
-  };
-  const showChildrenDetailDrawer = (item: any) => {
-    setDescription(item.descripe);
-    setProjecctName(item.name);
-    setActiveItem(item);
-    setChildrenDetailDrawer(true);
-  };
-
-  const onChildrenDetailDrawerClose = () => {
-    setChildrenDetailDrawer(false);
-    updateProjectDetailDB(activeItem.nanoid, {
-      name: projecctName,
-      descripe: description,
-    });
-    setDescription('');
-    setProjecctName('');
-  };
 
   const showModal = () => {
     setIsModalOpen(true);
   };
 
   const handleOk = () => {
-    
+
     setIsModalOpen(false);
   };
 
   const handleCancel = () => {
     setIsModalOpen(false);
   };
+
+  const showSettingModal = () => {
+    setIsSettingModalOpen(true);
+  };
+
+  const handleSettingOk = () => {
+
+    setIsSettingModalOpen(false);
+  };
+
+  const handleSettingCancel = () => {
+    setIsSettingModalOpen(false);
+  };
+
   const showKeysModal = () => {
     setIsKeysModalOpen(true);
   };
 
   const handleKeysOk = () => {
-    
+
     setIsKeysModalOpen(false);
   };
 
@@ -223,42 +105,10 @@ export default function IndexPage() {
     setIsKeysModalOpen(false);
   };
 
-  const showNewProjectModal = () => {
-    // const systemStartNode = Editor.start(editors.system, []);
-    // const systemEndNode = Editor.end(editors.system, []);
-    // const conversationStartNode = Editor.start(editors.conversation, []);
-    // const conversationEndNode = Editor.end(editors.conversation, []);
-    // const testStartNode = Editor.start(editors.test, []);
-    // const testEndNode = Editor.end(editors.test, []);
-
-    // const nodeList = [
-    //   systemStartNode,
-    //   systemEndNode,
-    //   conversationStartNode,
-    //   conversationEndNode,
-    //   testStartNode,
-    //   testEndNode,
-    // ];
-
-    // const isBlankProject = nodeList.every(
-    //   (item) => JSON.stringify(item?.path) == '[0,0]',
-    // );
-    // if (isBlankProject) {
-    //   messageApi.info('Already a blank project');
-    //   return;
-    // }
-    setisNewProjectModalOpen(true);
-  };
-  const handleNewProjectModalOk = () => {
-    newProjectWrap(projecctName, description);
-    setisNewProjectModalOpen(false);
-    setDescription('');
-    setProjecctName('');
+  const jumpToHome = () => {
+    history.push('/project')
   };
 
-  const handleNewProjectModalCancel = () => {
-    setisNewProjectModalOpen(false);
-  };
 
   const resetLayout = async () => {
     editorLayout.layout = layoutGrid;
@@ -266,14 +116,14 @@ export default function IndexPage() {
 
   return (
     <>
-      <div className={styles.container}>
+      <div className={`componentContainer  ${styles.container}`} >
         <Space wrap >
-          <Button
+          {/* <Button
             shape="circle"
             type="primary"
             icon={<RedoOutlined />}
             onClick={resetLayout}
-          ></Button>
+          ></Button> */}
           {/* <Button
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() => setOpenGuid(true)}
@@ -283,23 +133,23 @@ export default function IndexPage() {
           </Button> */}
           <Button
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={showDrawer}
-            ref={ref1}
-            shape="round"
-          >
-            Projects
-          </Button>
-          <Button
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={showNewProjectModal}
+            onClick={showSettingModal}
             ref={ref2}
             shape="round"
           >
-            New
+            Setting
           </Button>
           <Button
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={ showKeysModal }
+            onClick={jumpToHome}
+            ref={ref2}
+            shape="round"
+          >
+            Home
+          </Button>
+          <Button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={showKeysModal}
             ref={ref2}
             shape="round"
           >
@@ -315,55 +165,6 @@ export default function IndexPage() {
             Publish
           </Button>
         </Space>
-        <Drawer
-          title="Project List"
-          width={700}
-          closable={false}
-          onClose={onClose}
-          open={open}
-        >
-          <ProjectList
-            showChildrenLogDrawer={showChildrenLogDrawer}
-            showChildrenDetailDrawer={showChildrenDetailDrawer}
-            open={open}
-            onClose={onClose}
-            childrenDetailDrawer={childrenDetailDrawer}
-          ></ProjectList>
-          <Drawer
-            title="Generate history"
-            width={500}
-            closable={false}
-            onClose={onChildrenLogDrawerClose}
-            open={childrenLogDrawer}
-          >
-            <LogList></LogList>
-          </Drawer>
-          <Drawer
-            title="Project Detail"
-            width={500}
-            closable={false}
-            onClose={onChildrenDetailDrawerClose}
-            open={childrenDetailDrawer}
-          >
-            <TextArea
-              placeholder="Project Name"
-              onChange={(e) => {
-                setProjecctName(e.target.value);
-              }}
-              value={projecctName}
-              autoSize
-            />
-            <div style={{ margin: '30px 0' }} />
-            <TextArea
-              placeholder="Description....."
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-              }}
-              autoSize={{ minRows: 3, maxRows: 8 }}
-            />
-          </Drawer>
-        </Drawer>
 
         <Modal
           title="Bot Info"
@@ -387,29 +188,27 @@ export default function IndexPage() {
           <KeyTable></KeyTable>
         </Modal>
         <Modal
-          title="New Project"
-          open={isNewProjectModalOpen}
-          onOk={handleNewProjectModalOk}
-          onCancel={handleNewProjectModalCancel}
+          title="Setting"
+          open={isKeysModalOpen}
+          width={600}
+          onOk={handleKeysOk}
+          onCancel={handleKeysCancel}
+          destroyOnClose={true}
         >
-          <TextArea
-            placeholder="Project Name"
-            onChange={(e) => {
-              setProjecctName(e.target.value);
-            }}
-            value={projecctName}
-            autoSize
-          />
-          <div style={{ margin: '30px 0' }} />
-          <TextArea
-            placeholder="Description....."
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-            }}
-            autoSize={{ minRows: 3, maxRows: 8 }}
-          />
+          <KeyTable></KeyTable>
         </Modal>
+        <Modal
+          title="Setting"
+          open={isSettingModalOpen}
+          width={600}
+          footer={null}
+          onOk={handleSettingOk}
+          onCancel={handleSettingCancel}
+          destroyOnClose={true}
+        >
+          <Setting projectid={projectid}></Setting>
+        </Modal>
+        
         <Tour
           open={openGuid}
           onClose={() => setOpenGuid(false)}

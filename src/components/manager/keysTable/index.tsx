@@ -1,9 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import type { InputRef } from 'antd';
-import { Button, Form, Input, Popconfirm, Table, Row, Select,Col } from 'antd';
+import { Button, Form, Input, Popconfirm, Table, Row, Select, Col } from 'antd';
 import type { FormInstance } from 'antd/es/form';
-import { apikeysState } from '@/stores/apikeys';
-import { useSnapshot } from 'valtio';
 import styles from './index.less'
 const EditableContext = React.createContext<FormInstance<any> | null>(null);
 
@@ -87,10 +85,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     },
                 ]}
             >
-                <Input  style={{width:'90px',minHeight:'39px'}} ref={inputRef} onPressEnter={save} onBlur={save} />
+                <Input style={{ width: '90px', minHeight: '39px' }} ref={inputRef} onPressEnter={save} onBlur={save} />
             </Form.Item>
         ) : (
-            <div className="editable-cell-value-wrap"  style={{ paddingRight: 24,width:'90px',minHeight:'39px' }} onClick={toggleEdit}>
+            <div className="editable-cell-value-wrap" style={{ paddingRight: 24, width: '90px', minHeight: '39px' }} onClick={toggleEdit}>
                 {children}
             </div>
         );
@@ -111,21 +109,33 @@ interface DataType {
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>;
 
 export default () => {
-    // const [dataSource, setDataSource] = useState<DataType[]>([
-    //     {
-    //         key: '0',
-    //         name: 'Test',
-    //         apikey: 'TTTTTTTTTTTTTT',
-    //         remark: '',
-    //     },
-    // ]);
-
-    const dataSource = useSnapshot(apikeysState)
+    const [dataSource, setDataSource] = useState([]);
+    const [currentuse, setCurrentuse] = useState('')
+    const [isUseServer, setIsUseServer] = useState(false)
     const [count, setCount] = useState(2);
 
+
+    useEffect(()=>{
+        const info = JSON.parse(localStorage.getItem('apiKeys'))
+        if(info){
+            setDataSource(info.dataSource)
+            setCurrentuse(info.currentuse)
+            setIsUseServer(info.isUseServer)
+            setCount(info.count)
+        }
+    },[])
+
+    useEffect(()=>{
+        localStorage.setItem('apiKeys',JSON.stringify({
+            dataSource,currentuse,isUseServer,count
+        }))
+    },[isUseServer,currentuse,dataSource,count])
+
     const handleDelete = (key: React.Key) => {
-        const newData = dataSource.keys.filter((item) => item.key !== key);
-        apikeysState.keys.splice(0,apikeysState.keys.length,...newData)
+
+
+        const newData = dataSource.filter((item) => item.key !== key);
+        setDataSource(newData)
     };
 
     const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
@@ -151,7 +161,7 @@ export default () => {
             title: 'operation',
             dataIndex: 'operation',
             render: (_, record: { key: React.Key }) =>
-                dataSource.keys.length >= 1 ? (
+                dataSource.length >= 1 ? (
                     <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
                         <a>Delete</a>
                     </Popconfirm>
@@ -162,24 +172,28 @@ export default () => {
     const handleAdd = () => {
         const newData: DataType = {
             key: count,
-            name: ``,
+            name: `API Key ${count}`,
             apikey: '',
             remark: ``,
         };
-        // setDataSource([...dataSource, newData]);
-        apikeysState.keys.push(newData)
+        setDataSource([...dataSource, newData]);
         setCount(count + 1);
+        
     };
 
     const handleSave = (row: DataType) => {
-        const newData = [...dataSource.keys];
+        const newData = [...dataSource];
         const index = newData.findIndex((item) => row.key === item.key);
         const item = newData[index];
         newData.splice(index, 1, {
             ...item,
             ...row,
         });
-        apikeysState.keys.splice(0,apikeysState.keys.length,...newData)
+
+        if(dataSource.length == 1){
+            setCurrentuse(item.apikey)
+        }
+        setDataSource(newData);
     };
 
     const components = {
@@ -206,11 +220,10 @@ export default () => {
     });
 
     const handleChange = (value: string) => {
-        apikeysState.currentuse = value
+        setCurrentuse(value)
     };
     const handleChangeServer = (value: boolean) => {
-        console.log()
-        apikeysState.isUseServer = value
+        setIsUseServer(value)
     };
 
     return (
@@ -219,21 +232,21 @@ export default () => {
             <Row align="middle" gutter={16} >
                 <Col>Current Use</Col>
                 <Col> <Select
-                    defaultValue={dataSource.keys[0]?.apikey}
-                    value={dataSource.currentuse}
+                    defaultValue={dataSource[0]?.apikey}
+                    value={currentuse}
                     style={{ width: 120 }}
                     onChange={handleChange}
-                    options={dataSource.keys.map((item:any)=>{
-                        return  { value: item?.apikey, label: item?.name }
+                    options={dataSource.map((item: any) => {
+                        return { value: item?.apikey, label: item?.name }
                     })}
                 /></Col>
                 <Col>Server Forwarding</Col>
                 <Col> <Select
                     // defaultValue={false}
-                    value={dataSource.isUseServer}
+                    value={isUseServer}
                     style={{ width: 120 }}
                     onChange={handleChangeServer}
-                    options={[ { value: false, label: 'No' }, { value: true,label: 'Yes'}]}
+                    options={[{ value: false, label: 'No' }, { value: true, label: 'Yes' }]}
                 /></Col>
             </Row>
             <br />
@@ -244,7 +257,7 @@ export default () => {
                 components={components}
                 rowClassName={() => 'editable-row'}
                 bordered
-                dataSource={dataSource.keys}
+                dataSource={dataSource}
                 columns={columns as ColumnTypes}
             />
         </div>

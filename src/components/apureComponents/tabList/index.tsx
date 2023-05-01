@@ -377,6 +377,8 @@ export default ({
         }
     };
 
+    
+
     return (
         <Tabs
             type="editable-card"

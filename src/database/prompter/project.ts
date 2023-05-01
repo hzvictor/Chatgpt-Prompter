@@ -10,8 +10,7 @@ export async function getAllProjectList() {
     }
 }
 
-export async function updateProjectDetail(nanoid: string, data: any) {
-    console.log(nanoid, data);
+export async function updateProjectDetail({nanoid, data}:any) {
     try {
         return db.project.update(nanoid, data);
     } catch (error) {
@@ -46,18 +45,36 @@ export async function deleteProject(nanoid: string) {
 export async function newProject(
     name: string = 'unknow',
     describe: string = '',
-    cover:string = '',
-    type:string,
-    model:string
+    cover: string = '',
+    type: string,
+    model: string
 ) {
     try {
+
+        const layoutConfig = {
+            isDraggable: false,
+            isResizable: false,
+            showParameter: true,
+            showTuning: true,
+            showTest: true,
+            showChat: true,
+            layoutGrid: [{ w: 13, h: 24, x: 5, y: 0, i: 'tuning', moved: false, static: false },
+            { w: 6, h: 19, x: 18, y: 0, i: 'chat', moved: false, static: false },
+            { w: 5, h: 9, x: 0, y: 10, i: 'slideList', moved: false, static: false },
+            { w: 5, h: 2, x: 0, y: 0, i: 'manager', moved: false, static: false },
+            { w: 6, h: 11, x: 18, y: 19, i: 'test', moved: false, static: false }],
+            // showLogitBias:false,
+        }
+
+
         await db.project.put({
-            nanoid:makeNodeId(),
+            nanoid: makeNodeId(),
             name: name,
             cover: cover,
             describe: describe,
             type: type,
             model: model,
+            layoutConfig: layoutConfig,
             creatData: dayjs().valueOf(),
             updateDate: dayjs().valueOf(),
         });

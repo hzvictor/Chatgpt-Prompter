@@ -10,7 +10,6 @@ export async function getAllProjectListDB() {
   }
 }
 export async function updateProjectDetailDB(nanoid: string, data: any) {
-  console.log(nanoid, data);
   try {
     return db.projectDetails.update(nanoid, data);
   } catch (error) {
