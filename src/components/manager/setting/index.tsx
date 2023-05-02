@@ -13,7 +13,7 @@ function Setting({ layoutConfig, dispatch, projectid }: any) {
 
     useEffect(() => {
         form.setFieldsValue(layoutConfig)
-    }, [])
+    }, [projectid])
 
     const handleChange = (value: any) => {
         const newLayoutConfig = JSON.parse(JSON.stringify(layoutConfig))

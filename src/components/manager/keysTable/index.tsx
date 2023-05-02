@@ -115,27 +115,43 @@ export default () => {
     const [count, setCount] = useState(2);
 
 
-    useEffect(()=>{
+    useEffect(() => {
         const info = JSON.parse(localStorage.getItem('apiKeys'))
-        if(info){
+        if (info) {
             setDataSource(info.dataSource)
             setCurrentuse(info.currentuse)
             setIsUseServer(info.isUseServer)
             setCount(info.count)
         }
-    },[])
+    }, [])
+    // updateLocalData('currentuse',newData)
+    // updateLocalData('count',count)
+    // updateLocalData('isUseServer',newData)
+    const updateLocalData = (key: string, value: any) => {
 
-    useEffect(()=>{
-        localStorage.setItem('apiKeys',JSON.stringify({
-            dataSource,currentuse,isUseServer,count
-        }))
-    },[isUseServer,currentuse,dataSource,count])
+        const info = JSON.parse(localStorage.getItem('apiKeys'))
+        if (info) {
+            info[key] = value
+            // const info = JSON.parse(localStorage.getItem('apiKeys'))
+            localStorage.setItem('apiKeys', JSON.stringify(
+                info
+            ))
+        }else{
+            const info : any = {} 
+            info[key] = value
+            localStorage.setItem('apiKeys', JSON.stringify(
+                info
+            ))
+        }
+
+    }
 
     const handleDelete = (key: React.Key) => {
 
 
         const newData = dataSource.filter((item) => item.key !== key);
         setDataSource(newData)
+        updateLocalData('dataSource', newData)
     };
 
     const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
@@ -177,8 +193,10 @@ export default () => {
             remark: ``,
         };
         setDataSource([...dataSource, newData]);
+        updateLocalData('dataSource', [...dataSource, newData])
         setCount(count + 1);
-        
+        updateLocalData('count', count + 1)
+
     };
 
     const handleSave = (row: DataType) => {
@@ -190,10 +208,13 @@ export default () => {
             ...row,
         });
 
-        if(dataSource.length == 1){
+        if (dataSource.length == 1) {
             setCurrentuse(item.apikey)
+            updateLocalData('currentuse', item.apikey)
+
         }
         setDataSource(newData);
+        updateLocalData('dataSource', newData)
     };
 
     const components = {
@@ -221,14 +242,17 @@ export default () => {
 
     const handleChange = (value: string) => {
         setCurrentuse(value)
+        updateLocalData('currentuse', value)
     };
     const handleChangeServer = (value: boolean) => {
         setIsUseServer(value)
+        updateLocalData('isUseServer', value)
     };
 
     return (
         <div>
-            <span className={styles.modelName}> All your keys will be saved locally, and all requests will be sent from your local to openai.</span>
+            <div className={styles.modelName}> All your keys will be saved locally. The server will not keep your key, so every request will bring the key</div>
+            <br />
             <Row align="middle" gutter={16} >
                 <Col>Current Use</Col>
                 <Col> <Select

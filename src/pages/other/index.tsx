@@ -1,5 +1,5 @@
 import styles from './index.less';
-import Chat from '../../components/chat';
+import Chat from '../../components/chats';
 import Editor from '../../components/editor';
 import { Layout, Space, Menu } from 'antd';
 import type { MenuProps } from 'antd';

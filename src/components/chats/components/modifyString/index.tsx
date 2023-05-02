@@ -284,6 +284,12 @@ const App: React.FC = () => {
             Add a row
           </Button>
         </Col>
+        <Col>
+          <span style={{ color: 'rgba(0,0,0,.6)' }}>
+            {' '}
+            Only the first line of modifiers will take effect{' '}
+          </span>
+        </Col>
       </Row>
       <DndContext onDragEnd={onDragEnd}>
         <SortableContext

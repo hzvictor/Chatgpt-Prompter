@@ -199,7 +199,7 @@ const App: React.FC = ({ tuningid }: any) => {
 
     useEffect(() => {
         updateTableList()
-    }, [])
+    }, [tuningid])
 
 
     const updateTableList = () => {
@@ -290,12 +290,7 @@ const App: React.FC = ({ tuningid }: any) => {
                 dataIndex: 'delete',
                 render: (_, record: { key: React.Key }) =>
                     dataSource.length >= 1 ? (
-                        <Popconfirm
-                            title="Sure to delete?"
-                            onConfirm={() => handleDelete(record.key)}
-                        >
-                            <DeleteOutlined />
-                        </Popconfirm>
+                        <DeleteOutlined onClick={() => handleDelete(record.key)} />
                     ) : null,
             },
         ];

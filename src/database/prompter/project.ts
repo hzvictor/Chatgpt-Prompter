@@ -10,7 +10,7 @@ export async function getAllProjectList() {
     }
 }
 
-export async function updateProjectDetail({nanoid, data}:any) {
+export async function updateProjectDetail({ nanoid, data }: any) {
     try {
         return db.project.update(nanoid, data);
     } catch (error) {
@@ -53,16 +53,58 @@ export async function newProject(
 
         const layoutConfig = {
             isDraggable: false,
-            isResizable: false,
+            isResizable: true,
             showParameter: true,
             showTuning: true,
             showTest: true,
             showChat: true,
-            layoutGrid: [{ w: 13, h: 24, x: 5, y: 0, i: 'tuning', moved: false, static: false },
-            { w: 6, h: 19, x: 18, y: 0, i: 'chat', moved: false, static: false },
-            { w: 5, h: 9, x: 0, y: 10, i: 'slideList', moved: false, static: false },
-            { w: 5, h: 2, x: 0, y: 0, i: 'manager', moved: false, static: false },
-            { w: 6, h: 11, x: 18, y: 19, i: 'test', moved: false, static: false }],
+            layoutGrid: [
+                {
+                    "w": 6,
+                    "h": 19,
+                    "x": 18,
+                    "y": 0,
+                    "i": "chat",
+                    "moved": false,
+                    "static": false
+                },
+                {
+                    "w": 13,
+                    "h": 30,
+                    "x": 5,
+                    "y": 0,
+                    "i": "tuning",
+                    "moved": false,
+                    "static": false
+                },
+                {
+                    "w": 5,
+                    "h": 27,
+                    "x": 0,
+                    "y": 3,
+                    "i": "slideList",
+                    "moved": false,
+                    "static": false
+                },
+                {
+                    "w": 5,
+                    "h": 3,
+                    "x": 0,
+                    "y": 0,
+                    "i": "manager",
+                    "moved": false,
+                    "static": false
+                },
+                {
+                    "w": 6,
+                    "h": 11,
+                    "x": 18,
+                    "y": 19,
+                    "i": "test",
+                    "moved": false,
+                    "static": false
+                }
+            ],
             // showLogitBias:false,
         }
 

@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import CodeEditor from '@/components/apureComponents/codeEditor';
-import Chat from '@/components/chat';
+import Chat from '@/components/chats';
 import Test from '@/components/editorBrothers/test';
 import { upOrLeftState } from '@/stores/globalFunction';
 import { graphState, dreawerState } from '@/stores/graph';

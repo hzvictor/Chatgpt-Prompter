@@ -20,6 +20,8 @@ export default [
           { path: '/project', component: '@/pages/project/index' },
           { path: '/dashboard', component: '@/pages/dashboard/index' },
           { path: '/template', component: '@/pages/template/index' },
+          { path: '/apikeys', component: '@/pages/apiKeys/index' },
+          { path: '/openai', component: '@/pages/openai/index' },
           { path: '/connect/:providerName/redirect', component: '@/pages/LoginRedirect' },
         ],
       },

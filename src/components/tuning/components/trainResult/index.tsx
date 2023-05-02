@@ -30,17 +30,21 @@ const columns = [
 ];
 
 
-const App: React.FC = ({ result }: any) => {
+const App = ({ result, loading }: any) => {
     const  [ resultInfo, setResultInfo ] = useState(result)
     useEffect(() => {
+        result.events = result.events.map((item:any)=>{
+            item.key =item.message
+
+            return item
+        })
         setResultInfo(result)
     }, [result])
     return <>
-        <Descriptions >
+        <Descriptions  >
             <Descriptions.Item label="Status">{resultInfo.status}</Descriptions.Item>
             <Descriptions.Item label="Model">{resultInfo.model}</Descriptions.Item>
             <Descriptions.Item label="Fine Tuned Model">{resultInfo.fine_tuned_model}</Descriptions.Item>
-            <Descriptions.Item label="Result Files"><Button type="primary" >Download</Button></Descriptions.Item>
             <Descriptions.Item label="Created At">
             {dayjs(resultInfo.created_at * 1000).format('YYYY-MM-DD-HH:mm:ss')}
             </Descriptions.Item>
@@ -49,7 +53,7 @@ const App: React.FC = ({ result }: any) => {
             </Descriptions.Item>
         </Descriptions>
         <br />
-        <Table columns={columns} dataSource={resultInfo.events} />
+        <Table loading={loading} columns={columns} dataSource={resultInfo.events} />
     </>
 };
 

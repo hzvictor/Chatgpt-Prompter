@@ -15,7 +15,7 @@ const { conversationState } = conversationStore;
 const { systemState } = systemStore;
 import LogitBias from '@/components/parameter/components/logitBias';
 import SlideList from '@/components/parameter/components/slideList';
-import ModifyString from '@/components/chat/components/modifyString';
+import ModifyString from '@/components/chats/components/modifyString';
 import { SelectOutlined, DragOutlined, PauseCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { graphState } from '@/stores/graph';
 import { useState } from 'react';

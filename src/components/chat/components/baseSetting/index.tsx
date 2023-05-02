@@ -14,26 +14,22 @@ import {
   Upload,
 } from 'antd';
 const { Option } = Select;
-import { subscribe, useSnapshot } from 'valtio';
 import botStore from '@/stores//bot';
-import { chatFunction } from '@/stores/globalFunction';
-import messageHistoryStore from '@/stores/messageHistory';
 import UploadAntd from '@/components/apureComponents/uploadAntd'
 import TextArea from 'antd/es/input/TextArea';
+import { updateChatbotDetail } from '@/database/prompter/chatbot'
 
 
-const { messageHistoryState } = messageHistoryStore;
-
-const getBase64 = (img: RcFile, callback: (url: string) => void) => {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result as string));
-  reader.readAsDataURL(img);
-};
-
-const App: React.FC = ({ showDrawer }: any) => {
-
-  const shotBotState = useSnapshot(botStore.botState);
-
+const App = ({ showDrawer, chatbotInfo, setChatbotName }: any) => {
+  const [form] = Form.useForm();
+  const [imgUrl, setImgUrl] = useState('');
+  const [showHistoryEditorButton, setShowHistoryEditorButton] = useState(false);
+  useEffect(() => {
+    form.setFieldsValue(chatbotInfo.botConfig)
+    if (chatbotInfo.botConfig.avatar) {
+      setImgUrl(chatbotInfo.botConfig.avatar)
+    }
+  }, [chatbotInfo])
 
   const changeStrategy = (val: string) => {
     let code;
@@ -54,30 +50,62 @@ const App: React.FC = ({ showDrawer }: any) => {
         }
     }`
     }
-    botStore.botState.historyFunction = {
-      lang: 'javascript',
-      code: code
+
+
+    updateChatbotDetail(chatbotInfo.nanoid, {
+      historyFunction: {
+        lang: 'javascript',
+        code: code
+      }
+    })
+
+    if (val == 'function') {
+      setShowHistoryEditorButton(true)
+    } else {
+      setShowHistoryEditorButton(false)
     }
-    botStore.botState.strategy = val
   }
 
 
+  const onFormChange = (value: any) => {
+    if (value.name) {
+      setChatbotName(value.name)
+    }
+    if (value.historyStrategy) {
+      changeStrategy(value.historyStrategy)
+    }
+    if (chatbotInfo.nanoid) {
+      const formValue = form.getFieldsValue()
+      if (imgUrl) {
+        formValue.avatar = imgUrl
+      }
+      console.log(formValue)
+      updateChatbotDetail(chatbotInfo.nanoid, { botConfig: formValue })
+    }
+  }
 
+  useEffect(() => {
+    if (imgUrl) {
+      const formValue = form.getFieldsValue()
+      formValue.avatar = imgUrl
+      console.log(formValue)
+      updateChatbotDetail(chatbotInfo.nanoid, { botConfig: formValue })
+    }
+  }, [imgUrl])
 
   return (
     <>
       {/* <div>Base Setting</div> */}
-      <Form layout="vertical" hideRequiredMark>
+      <Form form={form} onValuesChange={onFormChange} layout="vertical" >
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="name"
               label="Chatbot Name"
               rules={[{ required: false, message: 'Please enter user name' }]}
-            >{console.log(shotBotState.name)}
+            >
               {
                 <Input
-                  value={shotBotState.name}
                   onChange={(val) => {
                     botStore.botState.name = val.target.value;
                   }}
@@ -93,68 +121,60 @@ const App: React.FC = ({ showDrawer }: any) => {
               name="describe"
               label="Describe"
               rules={[{ required: false, message: 'Please enter describe' }]}
-            >{console.log(shotBotState.describe)}
+            >
               {
                 <TextArea
-                  value={shotBotState.describe}
-                  onChange={(val) => {
-                    botStore.botState.describe = val.target.value;
-                  }}
                   placeholder="Please enter user name"
                 />
               }
             </Form.Item>
           </Col>
         </Row>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Tags" name="tags" >
+              <Select
+                mode="tags"
+                style={{ width: '100%' }}
+                tokenSeparators={[',']}
+                options={[
+                  {
+                    value: 'education',
+                    label: 'education',
+                  },
+                  {
+                    value: 'tech',
+                    label: 'tech',
+                  },
+                  {
+                    value: 'fun',
+                    label: 'fun',
+                  },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
         <Row>
           <Col span={12}>
             <Form.Item
-              name="avatar"
               label="Chatbot Avatar"
-              rules={[{ required: false, message: 'Please enter user name' }]}
             >
               <UploadAntd
-                // action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                // beforeUpload={beforeUpload}
-                // onChange={handleChange}
+                imgUrl={imgUrl} changImg={setImgUrl}
               >
               </UploadAntd>
             </Form.Item>
           </Col>
         </Row>
-        {/* <Row gutter={16}>
-                    <Col span={12}>
-                        <Form.Item
-                            name="owner"
-                            label="Owner"
-                            rules={[{ required: true, message: 'Please select an owner' }]}
-                        >
-                            <Select placeholder="Please select an owner">
-                                <Option value="xiao">Xiaoxiao Fu</Option>
-                                <Option value="mao">Maomao Zhou</Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item
-                            name="type"
-                            label="Type"
-                            rules={[{ required: true, message: 'Please choose the type' }]}
-                        >
-                            <Select placeholder="Please choose the type">
-                                <Option value="private">Private</Option>
-                                <Option value="public">Public</Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                </Row> */}
+
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              name="History Strategy"
+              name="historyStrategy"
               label="History Strategy"
-            >{console.log(shotBotState.strategy)}
-              <Select value={shotBotState.strategy} onChange={changeStrategy}
+            >
+              <Select
                 options={[
                   {
                     value: 'all', label: 'All',
@@ -175,27 +195,8 @@ const App: React.FC = ({ showDrawer }: any) => {
           </Col>
         </Row>
         <Row>
-          {shotBotState.strategy == 'function' && <Button onClick={showDrawer} type="primary"> Edit Funciton </Button>}
+          {showHistoryEditorButton && <Button onClick={showDrawer} type="primary"> Edit Funciton </Button>}
         </Row>
-        {/* <Row gutter={16}>
-          <Col span={24}>
-            <Form.Item
-              name="first"
-              label="First message"
-              rules={[
-                {
-                  required: false,
-                  message: 'please enter url description',
-                },
-              ]}
-            >
-              <Input.TextArea
-                rows={4}
-                placeholder="please enter url description"
-              />
-            </Form.Item>
-          </Col>
-        </Row> */}
       </Form>
     </>
   );

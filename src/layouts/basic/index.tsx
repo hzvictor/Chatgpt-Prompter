@@ -4,7 +4,7 @@ import { Layout, Space, Button, Menu, Row, Col, ConfigProvider, Tooltip, message
 import Avatar from 'react-avatar';
 const { Header } = Layout;
 import { LogoutOutlined, LoginOutlined } from '@ant-design/icons';
-import { RestOutlined, DashboardOutlined, AlignCenterOutlined,FileProtectOutlined,ClusterOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, DashboardOutlined, AlignCenterOutlined,FileProtectOutlined,ClusterOutlined } from '@ant-design/icons';
 import { useIntl, getLocale, setLocale, Link } from 'umi';
 import { IRouteComponentProps } from 'umi';
 import { useTransition, animated, UseTransitionProps } from 'react-spring';
@@ -244,7 +244,7 @@ function IndexPage({ children, location, history, user,dispatch }: any) {
 
             <Row style={{ height: 'calc(100vh - 64px)'}}  wrap={false }>
               <Col span={3} style={{backgroundColor:"white"}}  >
-                <div style={{height:'calc(100vh - 120px)'}}>
+                <div style={{height:'calc(100vh - 170px)'}}>
                   <Menu
                       onClick={onClick}
                       // style={{ width: 256 }}
@@ -261,9 +261,14 @@ function IndexPage({ children, location, history, user,dispatch }: any) {
                       mode="inline"
                       items={[
                         {
-                          key: "trash",
-                          icon: <RestOutlined />,
-                          label: 'Trash',
+                          key: "openai",
+                          icon: <FolderOpenOutlined />,
+                          label: 'Openai',
+                        },
+                        {
+                          key: "apikeys",
+                          icon: <FolderOpenOutlined />,
+                          label: 'Api Keys',
                         },
                       ]}
                     />

@@ -63,12 +63,48 @@ export async function fileUploadToOpenai(params:any) {
     });
 }
 
+export async function listfilesToOpenai() {
+
+    const info = getInfo()
+    if (!info) return
+    return request('/openchat/listfiles', {
+        method: 'POST',
+        data: {
+            api_key:info.currentuse,
+        },
+    });
+}
+
 
 export async function fileDeleteToOpenai(params:any) {
 
     const info = getInfo()
     if (!info) return
-    return request('/openchat/uploadfile', {
+    return request('/openchat/deleteFile', {
+        method: 'POST',
+        data: {
+            api_key:info.currentuse,
+            fileid:params
+        },
+    });
+}
+export async function downloadfileToOpenai(params:any) {
+
+    const info = getInfo()
+    if (!info) return
+    return request('/openchat/downloadfile', {
+        method: 'POST',
+        data: {
+            api_key:info.currentuse,
+            fileid:params
+        },
+    });
+}
+export async function retrievefileToOpenai(params:any) {
+
+    const info = getInfo()
+    if (!info) return
+    return request('/openchat/retrievefile', {
         method: 'POST',
         data: {
             api_key:info.currentuse,
@@ -92,7 +128,6 @@ export async function fileTrainToOpenai(params:any) {
 }
 
 export async function retrieveFTToOpenai(params:any) {
-
     const info = getInfo()
     if (!info) return
     return request('/openchat/retrieveft', {
@@ -100,6 +135,40 @@ export async function retrieveFTToOpenai(params:any) {
         data: {
             api_key:info.currentuse,
             ftid:params
+        },
+    });
+}
+
+
+export async function listfinetunesToOpenai() {
+    const info = getInfo()
+    if (!info) return
+    return request('/openchat/listfinetunes', {
+        method: 'POST',
+        data: {
+            api_key:info.currentuse,
+        },
+    });
+}
+export async function cancelfinetuneToOpenai(params:any) {
+    const info = getInfo()
+    if (!info) return
+    return request('/openchat/cancelfinetune', {
+        method: 'POST',
+        data: {
+            api_key:info.currentuse,
+            ftid:params
+        },
+    });
+}
+export async function deletemodelToOpenai(params:any) {
+    const info = getInfo()
+    if (!info) return
+    return request('/openchat/deletemodel', {
+        method: 'POST',
+        data: {
+            api_key:info.currentuse,
+            ftname:params
         },
     });
 }

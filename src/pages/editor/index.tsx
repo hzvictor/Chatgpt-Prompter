@@ -1,5 +1,5 @@
 import styles from './index.less';
-import Chat from '../../components/chat';
+import Chat from '../../components/chats';
 import System from '../../components/editorBrothers/system';
 import Conversation from '../../components/editorBrothers/conversation';
 // import Parameter from '../../components/parameter';

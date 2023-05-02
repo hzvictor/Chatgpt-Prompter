@@ -22,7 +22,7 @@ const App: React.FC = ({ onCancel, projectInfo }: any) => {
     useEffect(() => {
         // form.setFieldsValue(projectInfo)
         const newProjectInfo = JSON.parse(JSON.stringify(projectInfo))
-        delete newProjectInfo.cover
+
         form.setFieldsValue(newProjectInfo)
         if (projectInfo.cover && projectInfo.cover != '') {
             setImgUrl(projectInfo.cover)
@@ -34,7 +34,6 @@ const App: React.FC = ({ onCancel, projectInfo }: any) => {
     };
 
     const onFinish = async (info: any) => {
-        console.log('Success:', info);
         if (projectInfo.type) {
             await updateProjectDetail({
                 nanoid: projectInfo.nanoid,
@@ -94,7 +93,6 @@ const App: React.FC = ({ onCancel, projectInfo }: any) => {
                 <Row>
                     <Col span={16}>
                         <Form.Item
-                            name="cover"
                             label="Cover:"
                             rules={[{ required: false, message: 'Please enter user name' }]}
                         >

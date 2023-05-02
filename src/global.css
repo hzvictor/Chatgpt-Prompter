@@ -27,15 +27,7 @@ body{
 }
 
 
-.ant-drawer-content-wrapper .ant-col-12 .ant-table-tbody tr:first-child {
-    box-shadow: #00aa90 0px 0px 0px 5px inset;
-    /* background-color: aqua; */
-}
 
-.tableContainer .ant-table-tbody tr:first-child {
-    box-shadow: #00aa90 0px 0px 0px 5px inset;
-    /* background-color: aqua; */
-}
 
 .react-grid-item .ant-table-wrapper {
     height: 0;

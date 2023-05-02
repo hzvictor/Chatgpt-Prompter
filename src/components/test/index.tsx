@@ -1,25 +1,21 @@
-import { MenuOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext } from '@dnd-kit/core';
-import { CheckCircleFilled, CheckCircleOutlined } from '@ant-design/icons';
-import { fakeHooks } from '@/stores/fakehooks'
 import {
     arrayMove,
     SortableContext,
     useSortable,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import TabList from '@/components/bpurecomponents/tabList';
 import { CSS } from '@dnd-kit/utilities';
 import { makeNodeId } from '@/utils/withNodeId';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import type { InputRef } from 'antd';
-import { Button, Form, Input, Popconfirm, Table, message, Row, Col, Modal } from 'antd';
+import { InputRef, message } from 'antd';
+import { Button, Form, Input, Popconfirm, Table, Switch, Row, Col, Tooltip } from 'antd';
 import type { FormInstance } from 'antd/es/form';
-import { getProjectTuningList, newTuning, updateTuningDetail, updateActiveTuning, getTargetTuning, deleteTuning } from '@/database/prompter/tuning'
-import { retrieveFTToOpenai, cancelfinetuneToOpenai } from '@/services/openai'
-import TrainResult from './components/trainResult'
-import TabList from '@/components/bpurecomponents/tabList';
-import Train from './components/train'
+import { getProjectTestList, newTest, updateTestDetail, updateActiveTest, getTargetTest, deleteTest } from '@/database/prompter/test'
+import { fileUploadToOpenai } from '@/services/openai'
 import styles from './index.less';
 import dayjs from 'dayjs';
 const { TextArea } = Input;
@@ -50,7 +46,9 @@ const EditableCell: React.FC<EditableCellProps> = ({
     ...restProps
 }) => {
     const [editing, setEditing] = useState(false);
+
     const inputRef = useRef<InputRef>(null);
+
     const form = useContext(EditableContext)!;
 
     useEffect(() => {
@@ -127,8 +125,6 @@ interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
 
 const TableRow = ({ children, ...props }: RowProps) => {
 
-
-
     const [form] = Form.useForm();
     const {
         attributes,
@@ -187,24 +183,17 @@ const TableRow = ({ children, ...props }: RowProps) => {
 };
 
 const App = ({ projectid }: any) => {
+
     const [loading, setLoading] = useState(false);
-    const [loadingStop, setLoadingStop] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-    const [trainResult, setTrainResult] = useState({})
-    const [updateTimer, setUpdateTimert] = useState({})
     const [tableInfo, setTableInfo] = useState({
         nanoid: '',
-        name: 'Tuning',
+        name: 'Test',
         projectid: projectid,
-        fine_tuned_model: '',
-        trainConfig: {},
-        isTrain: false,
+        isSynchronize: false,
         isActive: true,
     })
     const [dataSource, setDataSource] = useState([])
     const [allDataSource, setAllDataSource] = useState([])
-
 
     useEffect(() => {
         updateTableList()
@@ -212,28 +201,28 @@ const App = ({ projectid }: any) => {
 
 
     const updateTableList = () => {
-        getProjectTuningList(projectid).then(res => {
+        getProjectTestList(projectid).then(res => {
             if (res.all.length == 0) {
-                newTuning('Tuning', projectid).then((id: any) => {
+                newTest('Test', projectid,).then((id: any) => {
                     setTableInfo({
                         nanoid: id,
-                        name: 'Tuning',
+                        name: 'Test',
                         projectid: projectid,
-                        fine_tuned_model: '',
-                        trainConfig: {},
-                        isTrain: false,
-                        isActive: true,
+                        isSynchronize: false, // 0 1 2
+                        isActive: true
                     })
-                    setAllDataSource([{
-                        nanoid: id,
-                        name: 'Tuning',
-                        projectid: projectid,
-                        fine_tuned_model: '',
-                        trainConfig: {},
-                        isTrain: false,
-                        isActive: true,
-                    }])
+
+                    setAllDataSource([
+                        {
+                            nanoid: id,
+                            name: 'Test',
+                            projectid: projectid,
+                            isSynchronize: false,
+                            isActive: true
+                        }
+                    ])
                 })
+
 
             } else {
                 setAllDataSource(res.all)
@@ -250,24 +239,16 @@ const App = ({ projectid }: any) => {
         delete newTableInfo.nanoid
         delete newTableInfo.creatData
         delete newTableInfo.projectid
-        delete newTableInfo.trainConfig
 
         newTableInfo.updateDate = dayjs().valueOf()
         if (tableInfo.nanoid) {
-            updateTuningDetail(tableInfo.nanoid, { ...newTableInfo, list: dataSource })
+            updateTestDetail(tableInfo.nanoid, { ...newTableInfo, list: dataSource })
         }
 
 
     }, [dataSource, tableInfo])
 
-    // const modifyStateShot = useSnapshot(modifyState);
-    // const [dataSource, setDataSource] = useState([
-    //     {
-    //         key: '1',
-    //         prefix: 'Edward King 0',
-    //         suffix: 'London, Park Lane no. 0',
-    //     },
-    // ]);
+
 
     const defaultColumns: (ColumnTypes[number] & {
         editable?: boolean;
@@ -275,61 +256,26 @@ const App = ({ projectid }: any) => {
     })[] = [
             {
                 key: 'sort',
+                width: '3%',
             },
             {
-                title: 'Prompt',
-                dataIndex: 'prompt',
-                width: '37%',
-                editable: true,
-            },
-            {
-                title: 'Completion',
-                width: '30%',
-                dataIndex: 'completion',
-                editable: true,
-            },
-            {
-                title: 'Remark',
-                width: '20%',
-                dataIndex: 'remark',
+                title: 'Message',
+                dataIndex: 'message',
+                width: '96%',
                 editable: true,
             },
             {
                 title: 'delete',
                 width: '3%',
                 dataIndex: 'delete',
+                align: "center",
                 render: (_, record: { key: React.Key }) =>
                     dataSource.length >= 1 ? (
-
                         <DeleteOutlined onClick={() => handleDelete(record.key)} />
-
                     ) : null,
             },
         ];
 
-    const disableColumns: (ColumnTypes[number] & {
-        editable?: boolean;
-        dataIndex: string;
-    })[] = [
-            {
-                title: 'Prompt',
-                dataIndex: 'prompt',
-                width: '37%',
-                editable: true,
-            },
-            {
-                title: 'Completion',
-                width: '30%',
-                dataIndex: 'completion',
-                editable: true,
-            },
-            {
-                title: 'Remark',
-                width: '20%',
-                dataIndex: 'remark',
-                editable: true,
-            },
-        ];
 
     const handleDelete = (key: React.Key) => {
         const newData = dataSource.filter((item) => item.key !== key);
@@ -339,9 +285,7 @@ const App = ({ projectid }: any) => {
     const handleAdd = () => {
         const newData = {
             key: makeNodeId(),
-            completion: ``,
-            remark: ``,
-            prompt: ``,
+            message: ``,
         };
         setDataSource([...dataSource, newData]);
 
@@ -384,77 +328,30 @@ const App = ({ projectid }: any) => {
         }
     };
 
-    // const Train = () => {
-    //    
-    // }
-
-    // const handleChange = (value: string) => {
-    //     console.log(`selected ${value}`);
-    //     const newData = { ...tableInfo, model: value };
-    //     setTableInfo(newData)
-    // };
-
-    const showModal = () => {
-        if (dataSource.length > 0) {
-            setIsModalOpen(true);
-        } else {
-            message.info('Data is empty')
-        }
 
 
-    };
-
-    const handleOk = () => {
-        setIsModalOpen(false);
-    };
-
-
-    const showResultModal = () => {
-        setIsResultModalOpen(true);
-    };
-
-    const handleResultOk = () => {
-        setIsResultModalOpen(false);
-    };
-
-    const handleResultCancel = () => {
-        setIsResultModalOpen(false);
-        clearInterval(updateTimer)
-    };
-
-    const handleCancel = async (isTrain: boolean) => {
-        if (isTrain) {
-            const newTableInfo = JSON.parse(JSON.stringify(tableInfo))
-            newTableInfo.isTrain = true
-            setTableInfo(newTableInfo)
-            setIsModalOpen(false);
-        } else {
-            setIsModalOpen(false);
-        }
-    };
 
 
 
 
     const addNewTab = async () => {
-        const id = await newTuning(`Tuning ${allDataSource.length}`, projectid,)
-        await updateActiveTuning(projectid, id)
+        const id = await newTest(`Test ${allDataSource.length}`, projectid)
+        await updateActiveTest(projectid, id)
         await updateTableList()
         return id
     }
     const changeTab = async (newActiveKey: string) => {
-        await updateActiveTuning(projectid, newActiveKey)
-        const tuning = await getTargetTuning(newActiveKey)
+        await updateActiveTest(projectid, newActiveKey)
+        const tuning = await getTargetTest(newActiveKey)
 
         setTableInfo(tuning)
         setDataSource(tuning.list)
     }
 
     const removeTab = async (targetKey: string, newActiveKey: string) => {
-
         if (targetKey != newActiveKey) {
             await changeTab(newActiveKey)
-            await deleteTuning(targetKey)
+            await deleteTest(targetKey)
             await updateTableList()
         } else {
             message.info('cannot delete the last')
@@ -462,97 +359,22 @@ const App = ({ projectid }: any) => {
     }
 
     const changeTabName = async (newName: string) => {
-        await updateTuningDetail(tableInfo.nanoid, { name: newName })
+        await updateTestDetail(tableInfo.nanoid, { name: newName })
     }
 
     const saveTab = () => {
         updateTableList()
     }
 
-    const startRetrieveFineTune = async () => {
 
-        const tuning = await getTargetTuning(tableInfo.nanoid)
-        if (tuning.trainConfig.ftid) {
-            setLoading(true)
-            retrieveFTToOpenai(tuning.trainConfig.ftid).then(res => {
-                setLoading(false)
-                if (res.data) {
-                    setTrainResult(res.data)
-                    showResultModal()
-                    if (res.data.fine_tuned_model) {
-                        const newTableInfo = JSON.parse(JSON.stringify(tableInfo))
-                        newTableInfo.fine_tuned_model = res.data.fine_tuned_model
-                        setTableInfo(newTableInfo)
+    const changeSynchronize = (val:any) =>{
+        const newTableInfo = JSON.parse(JSON.stringify(tableInfo))
 
-                        fakeHooks.updateModelOptions()
-                    } else {
-                        updateRetrieveFineTune(tableInfo.nanoid, tuning.trainConfig.ftid)
-                    }
-                } else {
-                    message.info('Result not exit')
-                }
-            })
-        } else {
-            message.info('Fine Tuning id not exit')
-        }
-    }
-
-    const updateRetrieveFineTune = async (tuningid: string, ftid: string) => {
-        const update = setInterval(() => {
-            if (tuningid == tableInfo.nanoid) {
-                setLoading(true)
-                retrieveFTToOpenai(ftid).then(res => {
-                    setLoading(false)
-                    if (res.data) {
-                        setTrainResult(res.data)
-                        if (res.data.fine_tuned_model) {
-                            const newTableInfo = JSON.parse(JSON.stringify(tableInfo))
-                            newTableInfo.fine_tuned_model = res.data.fine_tuned_model
-                            setTableInfo(newTableInfo)
-                            clearInterval(update)
-                        }
-                    }
-                })
-            } else {
-                retrieveFTToOpenai(ftid).then(res => {
-                    if (res.data) {
-                        setTrainResult(res.data)
-                        if (res.data.fine_tuned_model) {
-                            updateTuningDetail(tuningid, { fine_tuned_model: res.data.fine_tuned_model })
-                            clearInterval(update)
-                        }
-                    }
-                })
-            }
-
-        }, 5000)
-        setUpdateTimert(update)
-        setTimeout(() => {
-            clearInterval(update)
-        }, 1000 * 60 * 5);
-    }
-
-
-    const cancelfinetune = async () => {
-        setLoadingStop(true)
-        const tuning = await getTargetTuning(tableInfo.nanoid)
-        if (tuning.trainConfig.ftid) {
-            cancelfinetuneToOpenai(tuning.trainConfig.ftid).then(res => {
-                setLoadingStop(false)
-                if (res.data) {
-                    message.success('Fine Tuning is stoped')
-                } else {
-                    message.info('Fine Tuning is stoped')
-                }
-            }
-            )
-        } else {
-            message.info('Fine Tuning id not exit')
-        }
+        newTableInfo.isSynchronize = val
+        setTableInfo(newTableInfo)
     }
 
     return (
-
         <div className={`componentContainer  ${styles.container}`}>
             <Row>
                 {/* <Col className={styles.headerTitle} span={5} > Parameter</Col> */}
@@ -568,83 +390,60 @@ const App = ({ projectid }: any) => {
                     ></TabList>
                 </Col>
             </Row>
-            <Row justify="space-between">
+            <Row style={{ marginTop: "-10px", marginBottom: "5px", padding: "0 10px" }} align="middle" justify="space-between">
                 <Col >
                     <Button
                         onClick={handleAdd}
+                        disabled={tableInfo.isUpload}
                         type="primary"
-                        disabled={tableInfo.isTrain}
-                    // style={{ marginBottom: 16 }}
+                        shape="circle"
+                        icon={<PlusOutlined />}
                     >
-                        Add a row
                     </Button>
                 </Col>
                 <Col>
-                    <Row gutter={16}>
-
-                        {
-                            tableInfo.isTrain && !tableInfo.fine_tuned_model && <Col>
-                                <Button
-                                    onClick={cancelfinetune}
-                                    loading={loadingStop}
-                                >
-                                    Stop Train
-                                </Button>
-                            </Col>
-                        }
-
-                        <Col>
-                            <Button
-                                onClick={startRetrieveFineTune}
-                                loading={loading}
-                                icon={tableInfo.fine_tuned_model ? <CheckCircleFilled style={{ color: "green" }} /> : <CheckCircleOutlined />}
-                            // style={{ marginBottom: 16 }}
-                            >
-                                Training Result
-                            </Button>
-                        </Col>
-                        <Col> <Button
-                            onClick={showModal}
-                            type="primary"
-                            icon={tableInfo.isTrain ? <CheckCircleOutlined /> : ''}
-                        // style={{ marginBottom: 16 }}
+                    <Row >
+                        <Tooltip
+                            title="In synchronous mode, it will be tested according to the input order,
+Asynchronous mode will send both"
+                            color="lime"
                         >
-                            Train
-                        </Button></Col>
+                            <div className={styles.model}>
+                                {' '}
+                                <span className={styles.modelName}>Synchronize</span>{' '}
+                                <Switch
+                                    checked={tableInfo.isSynchronize}
+                                    onChange={(val)=>{changeSynchronize(val)}}
+                                    size="small"
+                                ></Switch>
+                            </div>
+                        </Tooltip>
                     </Row>
-
                 </Col>
             </Row>
-            <br />
+
             <DndContext onDragEnd={onDragEnd}>
                 <SortableContext
                     // rowKey array
-                    items={dataSource && dataSource.map((i) => i.key)}
+                    items={dataSource.map((i) => i.key)}
                     strategy={verticalListSortingStrategy}
                 >
                     <Table
-                        components={!tableInfo.isTrain ? {
+                        components={{
                             body: {
                                 row: TableRow,
                                 cell: EditableCell,
                             },
-                        } : undefined}
+                        }}
                         rowKey="key"
                         pagination={false}
-                        columns={tableInfo.isTrain ? disableColumns as ColumnTypes : columns as ColumnTypes}
+                        columns={columns as ColumnTypes}
                         rowClassName={() => 'editable-row'}
                         dataSource={dataSource}
                     />
                 </SortableContext>
             </DndContext>
-            <Modal width={600} destroyOnClose={true} title="Training Settings" footer={null} open={isModalOpen} onOk={handleOk} onCancel={() => { handleCancel(false) }}>
-                <Train tableInfo={tableInfo} onCancel={handleCancel}  ></Train>
-            </Modal>
-            <Modal width={1000} destroyOnClose={true} title="Training Result" open={isResultModalOpen} onOk={handleResultOk} onCancel={handleResultCancel}>
-                <TrainResult loading={loading} result={trainResult} ></TrainResult>
-            </Modal>
         </div>
-
     );
 };
 

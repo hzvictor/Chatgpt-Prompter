@@ -28,9 +28,10 @@ const getSrcFromFile = (file) => {
 
 
 
-const AliyunOSSUpload = ({ value, shapType, children }: any) => {
+const AliyunOSSUpload = ({ value, imgUrl, changImg, children }: any) => {
     const [OSSData, setOSSData] = useState<OSSDataType>();
     const [loading, setLoading] = useState(false);
+    const [imgUrlPre, setImgUrlPre] = useState('');
 
     // const shotBotState = useSnapshot(botStore.botState);
     // Mock get OSS api
@@ -59,7 +60,8 @@ const AliyunOSSUpload = ({ value, shapType, children }: any) => {
         if (info.file.status === 'done') {
             // Get this url from response in real world.
             setLoading(false);
-            // botStore.botState.avatar = `${OSSData?.host}/${info.file.url}`;
+            changImg(imgUrlPre)
+            // botStore.botState.avatar = ;
         }
     };
 
@@ -76,6 +78,7 @@ const AliyunOSSUpload = ({ value, shapType, children }: any) => {
         const filename = Date.now() + suffix;
         // @ts-ignore
         file.url = OSSData.dir + filename;
+        setImgUrlPre(`${OSSData?.host}/${file.url}`)
         return {
             key: file.url,
             OSSAccessKeyId: OSSData?.accessid,
@@ -85,15 +88,18 @@ const AliyunOSSUpload = ({ value, shapType, children }: any) => {
     };
 
     const beforeUpload: UploadProps['beforeUpload'] = async (file) => {
+
         const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
         if (!isJpgOrPng) {
             message.error('You can only upload JPG/PNG file!');
-            return
+            return false
         }
+
         const isLt2M = file.size / 1024 / 1024 < 0.2;
+
         if (!isLt2M) {
             message.error('Image must smaller than 200kb!');
-            return
+            return false
         }
 
         if (!OSSData) return false;
@@ -104,11 +110,12 @@ const AliyunOSSUpload = ({ value, shapType, children }: any) => {
             await init();
         }
 
-        
+
         return file;
     };
 
     const onPreview = async (file: UploadFile) => {
+        console.log(file, 111111111)
         const src = file.url || (await getSrcFromFile(file));
         const imgWindow = window.open(src);
 
@@ -119,6 +126,7 @@ const AliyunOSSUpload = ({ value, shapType, children }: any) => {
         } else {
             window.location.href = src;
         }
+
     };
 
     const uploadProps: UploadProps = {
@@ -142,16 +150,16 @@ const AliyunOSSUpload = ({ value, shapType, children }: any) => {
 
 
     return (
-        <ImgCrop rotationSlider>
+        <ImgCrop rotationSlider cropShape="round" >
             <Upload name="avatar"
-                listType="picture-card"
+                listType="picture-circle"
                 className="avatar-uploader"
                 showUploadList={false} {...uploadProps}>
-                {false? (
+                {imgUrl != '' ? (
                     <img
-                        src=''
+                        src={imgUrl}
                         alt="avatar"
-                        style={{ width: '70%' }}
+                        style={{ width: '70%', borderRadius:"50%" }}
                     />
                 ) : (
                     uploadButton

@@ -1,9 +1,10 @@
 import styles from './index.less';
 import { SettingOutlined, ShareAltOutlined, RightOutlined, RedoOutlined } from '@ant-design/icons';
 import { Drawer, Row, Col, Button, Tooltip } from 'antd';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ModifyString from '../modifyString';
 import BaseSetting from '../baseSetting';
+import { useSnapshot } from 'valtio';
 import { history } from 'umi';
 import botStore from '@/stores/bot';
 import { upOrLeftState } from '@/stores/globalFunction';
@@ -15,17 +16,10 @@ import CodeEditor from '@/components/apureComponents/codeEditor';
 import { getTargetFunctions, } from '@/database/functions'
 import { extractFunctions, findPythonFunctionNames, removePythonComments, removeJavascriptComments, jsToPythonFunctionWithComments, pythonToJsFunction } from '@/utils/little'
 
-export default ({chatbotInfo}:any) => {
+export default () => {
   const [open, setOpen] = useState(false);
   const [openCode, setOpenCode] = useState(false);
-  const [chatbotName, setChatbotName] = useState('Promter');
-
-  useEffect(()=>{
-    if(chatbotInfo.botConfig && chatbotInfo.botConfig.name){
-      setChatbotName(chatbotInfo.botConfig.name)
-    }
-  },[chatbotInfo])
-
+  const shotBotState = useSnapshot(botStore.botState);
   const showDrawer = () => {
     setOpen(true);
   };
@@ -95,7 +89,7 @@ export default ({chatbotInfo}:any) => {
           className={styles.iconStyle}
         /> */}
       </div>
-      <div>{chatbotName}</div>
+      <div>{shotBotState?.name}</div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <SettingOutlined
           className={styles.iconStyle}
@@ -159,10 +153,10 @@ export default ({chatbotInfo}:any) => {
       >
         <Row gutter={48}>
           <Col style={{ height: '600px', overflow: 'scroll' }} span={12}>
-            <BaseSetting chatbotInfo={chatbotInfo} setChatbotName={setChatbotName} showDrawer={showDefaultCode}  ></BaseSetting>
+            <BaseSetting showDrawer={showDefaultCode}  ></BaseSetting>
           </Col>
           <Col style={{ height: '600px', overflow: 'scroll' }} span={12}>
-            <ModifyString  chatbotInfo={chatbotInfo} ></ModifyString>
+            <ModifyString></ModifyString>
           </Col>
         </Row>
       </Drawer>

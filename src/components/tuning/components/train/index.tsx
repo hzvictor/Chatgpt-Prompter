@@ -10,17 +10,17 @@ import Validation from '../validation'
 import dayjs from 'dayjs';
 type LayoutType = Parameters<typeof Form>[0]['layout'];
 
-const App: React.FC = ({ tableInfo ,onCancel}: any) => {
+const App: React.FC = ({ tableInfo, onCancel }: any) => {
   const [form] = Form.useForm();
   const [dataSource, setDataSource] = useState([])
   const [trainConfig, setTrainConfig] = useState({
     openValidation: false,
     openMoreSetting: false,
     model: 'davinci',
-    n_epochs:4,
-    batch_size:0,
-    learning_rate_multiplier:0.05,
-    prompt_loss_weight:0.01
+    n_epochs: 4,
+    batch_size: 0,
+    learning_rate_multiplier: 0.05,
+    prompt_loss_weight: 0.01
   })
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,10 +37,10 @@ const App: React.FC = ({ tableInfo ,onCancel}: any) => {
       } else {
         form.setFieldsValue({
           model: 'davinci',
-          n_epochs:4,
-          batch_size:0,
-          learning_rate_multiplier:0.05,
-          prompt_loss_weight:0.01
+          n_epochs: 4,
+          batch_size: 0,
+          learning_rate_multiplier: 0.05,
+          prompt_loss_weight: 0.01
         })
       }
 
@@ -72,7 +72,6 @@ const App: React.FC = ({ tableInfo ,onCancel}: any) => {
   };
   const onFinish = (errorInfo: any) => {
     setLoading(true)
-    console.log('success:', errorInfo);
     const config = JSON.parse(JSON.stringify(trainConfig))
     if (!config.openValidation) {
       delete config.validation_file
@@ -88,11 +87,11 @@ const App: React.FC = ({ tableInfo ,onCancel}: any) => {
       delete config.prompt_loss_weight
     }
 
-    if(config.classification_betas){
-      config.classification_betas = config.classification_betas.map((item:any)=>Number(item))
+    if (config.classification_betas) {
+      config.classification_betas = config.classification_betas.map((item: any) => Number(item))
     }
 
-    if(config.classification_n_classes > 2){
+    if (config.classification_n_classes > 2) {
       delete config.classification_positive_class
     }
 
@@ -104,16 +103,14 @@ const App: React.FC = ({ tableInfo ,onCancel}: any) => {
     fileTrainToOpenai({
       jsonl: dataSource.map((item: any) => ({ completion: item.completion, prompt: item.prompt })),
       config: config
-    }).then((res:any)=>{
-      if(res.data){
-
-
-        updateTrainConfig('ftid',res.data).then(()=>{
+    }).then((res: any) => {
+      if (res?.data) {
+        updateTrainConfig('ftid', res.data).then(() => {
           onCancel(true)
         })
-        
+
       }
-      
+
       setLoading(false)
     })
   };
@@ -201,35 +198,35 @@ const App: React.FC = ({ tableInfo ,onCancel}: any) => {
               </Form.Item>
               {
                 trainConfig.compute_classification_metrics && <>
-                <Form.Item label="Classification N Classes" name="classification_n_classes" >
-                  <InputNumber />
-                </Form.Item>
-               {trainConfig.classification_n_classes <= 2 && <Form.Item label="classification Positive Class" name="classification_positive_class" >
-                  <TextArea></TextArea>
-                </Form.Item> }
+                  <Form.Item label="Classification N Classes" name="classification_n_classes" >
+                    <InputNumber />
+                  </Form.Item>
+                  {trainConfig.classification_n_classes <= 2 && <Form.Item label="classification Positive Class" name="classification_positive_class" >
+                    <TextArea></TextArea>
+                  </Form.Item>}
 
-                <Form.Item label="Classification Betas" name="classification_betas" >
-                  <Select
-                    mode="tags"
-                    style={{ width: '100%' }}
-                    tokenSeparators={[',']}
-                    options={[
-                      {
-                        value: '0.5',
-                        label: '0.5',
-                      },
-                      {
-                        value: '1',
-                        label: '1',
-                      },
-                      {
-                        value: '2',
-                        label: '2',
-                      },
-                    ]}
-                  />
-                </Form.Item>
-              </>
+                  <Form.Item label="Classification Betas" name="classification_betas" >
+                    <Select
+                      mode="tags"
+                      style={{ width: '100%' }}
+                      tokenSeparators={[',']}
+                      options={[
+                        {
+                          value: '0.5',
+                          label: '0.5',
+                        },
+                        {
+                          value: '1',
+                          label: '1',
+                        },
+                        {
+                          value: '2',
+                          label: '2',
+                        },
+                      ]}
+                    />
+                  </Form.Item>
+                </>
               }
             </>
 
@@ -238,7 +235,7 @@ const App: React.FC = ({ tableInfo ,onCancel}: any) => {
 
 
         <Form.Item wrapperCol={{ offset: 9, span: 16 }} >
-          <Button loading={loading}   htmlType="submit" type="primary">Submit</Button>
+          <Button loading={loading} htmlType="submit" type="primary">Submit</Button>
         </Form.Item>
       </Form>
       <Drawer width={900} destroyOnClose={true} title="Validation File" size="large" placement="right" onClose={onClose} open={open}>

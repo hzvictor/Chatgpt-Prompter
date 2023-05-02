@@ -1,26 +1,29 @@
 import styles from './index.less';
 import Chat from '@/components/chat';
 import Tuning from '@/components/tuning';
-import SlideList from '@/components/parameter/components/slideList';
+import SlideList from '@/components/slideList';
 import Manager from '@/components/manager';
-import Test from '@/components/editorBrothers/test';
+import Test from '@/components/test';
 import GridLayout from 'react-grid-layout';
 import { Button } from 'antd';
+import { updateProjectDetail } from '@/database/prompter/project'
 import { RedoOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { KeepAlive } from 'umi';
 import { connect } from 'umi';
 
 
-const layoutGrid = [{ w: 13, h: 24, x: 5, y: 0, i: 'tuning', moved: false, static: false },
-{ w: 6, h: 19, x: 18, y: 0, i: 'chat', moved: false, static: false },
-{ w: 5, h: 9, x: 0, y: 10, i: 'slideList', moved: false, static: false },
-{ w: 5, h: 2, x: 0, y: 0, i: 'manager', moved: false, static: false },
-{ w: 6, h: 11, x: 18, y: 19, i: 'test', moved: false, static: false }]
+// const layoutGrid = [{ w: 13, h: 24, x: 5, y: 0, i: 'tuning', moved: false, static: false },
+// { w: 6, h: 19, x: 18, y: 0, i: 'chat', moved: false, static: false },
+// { w: 5, h: 9, x: 0, y: 10, i: 'slideList', moved: false, static: false },
+// { w: 5, h: 2, x: 0, y: 0, i: 'manager', moved: false, static: false },
+// { w: 6, h: 11, x: 18, y: 19, i: 'test', moved: false, static: false }]
 
 function IndexPage({ match, layoutConfig, dispatch }: any) {
 
   const projectid = match.params.projectid ? match.params.projectid : '123'
+
+
 
   const ref: any = useRef(null);
   const [width, setWidth] = useState(0);
@@ -35,7 +38,8 @@ function IndexPage({ match, layoutConfig, dispatch }: any) {
       type: 'layoutConfig/getlayoutConfig',
       payload: projectid,
     })
-  }, []);
+
+  }, [projectid]);
 
   // const onLayoutChange = (layout: any) => {
   //   const changeList = layout.filter((item: any) => {
@@ -154,13 +158,12 @@ function IndexPage({ match, layoutConfig, dispatch }: any) {
     //   }
     // })
     newLayoutConfig.layoutGrid = JSON.parse(JSON.stringify(layout))
-    dispatch({
-      type: 'layoutConfig/updateLayoutConfig',
-      payload: {
-        nanoid: projectid,
-        data: { layoutConfig: newLayoutConfig }
-      },
+
+    updateProjectDetail( {
+      nanoid: projectid,
+      data: { layoutConfig: newLayoutConfig }
     })
+
 
   }
 
@@ -181,20 +184,20 @@ function IndexPage({ match, layoutConfig, dispatch }: any) {
         >
           {
             layoutConfig.showChat && <div className={styles.grad} key="chat">
-              <Chat></Chat>
+              <Chat  projectid={projectid} ></Chat>
             </div>
           }
           {layoutConfig.showTuning && <div className={styles.grad} key="tuning">
             <Tuning projectid={projectid} ></Tuning>
           </div>}
           {layoutConfig.showParameter && <div className={styles.grad} key="slideList">
-            <SlideList></SlideList>
+            <SlideList  projectid={projectid} ></SlideList>
           </div>}
           <div className={styles.grad} key="manager">
             <Manager projectid={projectid}></Manager>
           </div>
           {layoutConfig.showTest && <div className={styles.grad} key="test">
-            <Test></Test>
+            <Test projectid={projectid} ></Test>
           </div>}
         </GridLayout>
       </KeepAlive>
