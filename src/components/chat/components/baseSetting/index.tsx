@@ -25,38 +25,42 @@ const App = ({ showDrawer, chatbotInfo, setChatbotName }: any) => {
   const [imgUrl, setImgUrl] = useState('');
   const [showHistoryEditorButton, setShowHistoryEditorButton] = useState(false);
   useEffect(() => {
-    form.setFieldsValue(chatbotInfo.botConfig)
-    if (chatbotInfo.botConfig.avatar) {
+    if(chatbotInfo.botConfig && Object.keys(chatbotInfo.botConfig).length>0){
+      form.resetFields()
+      form.setFieldsValue(chatbotInfo.botConfig)
+    }else{
+    form.resetFields()
+    }
+
+    if (chatbotInfo.botConfig?.avatar) {
       setImgUrl(chatbotInfo.botConfig.avatar)
+    }else{
+      setImgUrl('')
     }
   }, [chatbotInfo])
 
   const changeStrategy = (val: string) => {
     let code;
     if (val == 'all' || val == 'function') {
-      code = `function history(inputContent, promptInfo) {
+      code = `function history(inputData) {
         return true
     }`
     } else if (val == 'user') {
-      code = `function history(inputContent, promptInfo) {
-        if(promptInfo.role == 'user'){
+      code = `function history(inputData) {
+        if(inputData.input.role == 'user'){
           return true
         }
     }`
     } else if (val == 'assistant') {
-      code = `function history(inputContent, promptInfo) {
-        if(promptInfo.role == 'assistant'){
+      code = `function history(inputData) {
+        if(inputData.input.role == 'assistant'){
           return true
         }
     }`
     }
 
-
     updateChatbotDetail(chatbotInfo.nanoid, {
-      historyFunction: {
-        lang: 'javascript',
-        code: code
-      }
+      historyFunction: code
     })
 
     if (val == 'function') {

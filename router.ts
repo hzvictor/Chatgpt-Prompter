@@ -9,7 +9,7 @@ export default [
       // { exact: false, path: '/mobile/chat', component: '@/pages/chat/mobile/index' },
       { path: '/editor/chatbot/turbo/:projectid', component: '@/pages/editors/chatbot/turbo/index' },
       { path: '/editor/chatbot/davinaci/:projectid', component: '@/pages/editors/chatbot/davinaci/index' },
-      { path: '/editor/chatbot/turbo/graph/:projectid', component: '@/pages/bot/index' },
+      { path: '/editor/graph/:type/:projectid', component: '@/pages/graph/index' },
       {
         path: '/',
         component: '@/layouts/basic/index',

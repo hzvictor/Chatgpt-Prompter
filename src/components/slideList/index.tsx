@@ -421,7 +421,7 @@ export default function IndexPage({ projectid }: any) {
             <Col span={16}>
               <Form.Item className={styles.formItemStyle} name="best_of">
                 <Slider
-                  min={0}
+                  min={1}
                   max={10}
                   step={1}
                 />
@@ -430,7 +430,7 @@ export default function IndexPage({ projectid }: any) {
             <Col span={4}>
               <Form.Item className={styles.formItemStyle} name="best_of">
                 <InputNumber
-                  min={0}
+                  min={1}
                   max={10}
                   step={1}
                   size="small"

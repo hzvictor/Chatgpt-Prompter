@@ -17,9 +17,8 @@ import LogitBias from '@/components/parameter/components/logitBias';
 import SlideList from '@/components/parameter/components/slideList';
 import ModifyString from '@/components/chats/components/modifyString';
 import { SelectOutlined, DragOutlined, PauseCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { graphState } from '@/stores/graph';
 import { useState } from 'react';
-export default ({ closeAllDreaw }: any) => {
+export default ({ clearAllInterval , graph}: any) => {
 
     const [selectValue, setSelectValue] = useState('select')
 
@@ -27,7 +26,7 @@ export default ({ closeAllDreaw }: any) => {
         upOrLeftState.upOrLeft = true;
         // upOrLeftState.lastLocation.push('/editor')
         history.goBack();
-        closeAllDreaw();
+        clearAllInterval();
     };
 
     const LogicbitsHoverContent = () => {
@@ -92,11 +91,11 @@ export default ({ closeAllDreaw }: any) => {
 
     const changeSelect = (val: string) => {
         if (val == 'panning') {
-            graphState.graph.disableSelection()
-            graphState.graph.enablePanning()
+            graph.disableSelection()
+            graph.enablePanning()
         } else {
-            graphState.graph.enableSelection()
-            graphState.graph.disablePanning()
+            graph.enableSelection()
+            graph.disablePanning()
         }
         setSelectValue(val)
 
@@ -104,7 +103,7 @@ export default ({ closeAllDreaw }: any) => {
 
 
     const playTest = () => {
-        graphState.playTest()
+        // graphState.playTest()
     }
 
     return (

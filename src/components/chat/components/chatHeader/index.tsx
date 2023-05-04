@@ -8,14 +8,14 @@ import { history } from 'umi';
 import botStore from '@/stores/bot';
 import { upOrLeftState } from '@/stores/globalFunction';
 import { chatFunction } from '@/stores/globalFunction'
-import messageHistoryStore from '@/stores/messageHistory';
+import { updateChatbotDetail } from '@/database/prompter/chatbot'
 import { currentFunction } from '@/stores/function'
 import { makeNodeId } from '@/utils/withNodeId';
 import CodeEditor from '@/components/apureComponents/codeEditor';
 import { getTargetFunctions, } from '@/database/functions'
 import { extractFunctions, findPythonFunctionNames, removePythonComments, removeJavascriptComments, jsToPythonFunctionWithComments, pythonToJsFunction } from '@/utils/little'
 
-export default ({chatbotInfo}:any) => {
+export default ({chatbotInfo,resetList,setHistory}:any) => {
   const [open, setOpen] = useState(false);
   const [openCode, setOpenCode] = useState(false);
   const [chatbotName, setChatbotName] = useState('Promter');
@@ -23,6 +23,8 @@ export default ({chatbotInfo}:any) => {
   useEffect(()=>{
     if(chatbotInfo.botConfig && chatbotInfo.botConfig.name){
       setChatbotName(chatbotInfo.botConfig.name)
+    }else{
+      setChatbotName('Promter')
     }
   },[chatbotInfo])
 
@@ -69,14 +71,13 @@ export default ({chatbotInfo}:any) => {
   const jumpToBotEditor = () => {
     upOrLeftState.upOrLeft = true;
     // upOrLeftState.lastLocation.push('/boteditor')
-    history.push('/editor/chat/3.5/graph');
+    history.push(`/editor/graph/chatbot/${chatbotInfo.nanoid}`);
   };
 
   const resetHistory = () => {
-    messageHistoryStore.messageHistoryState.list.splice(0, messageHistoryStore.messageHistoryState.list.length)
-    botStore.botState.history.splice(0, botStore.botState.history.length)
-    chatFunction.resetList()
-    chatFunction.firstTimeEntry()
+    updateChatbotDetail(chatbotInfo.nanoid, { messageHistorys: [] })
+    resetList([])
+    setHistory([])
   }
 
   return (
@@ -153,8 +154,9 @@ export default ({chatbotInfo}:any) => {
         placement="bottom"
         closable={false}
         onClose={onClose}
+
         open={open}
-        destroyOnClose={true}
+
         size="large"
       >
         <Row gutter={48}>

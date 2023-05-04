@@ -647,7 +647,36 @@ export function updateShotCut(nodeList: any) {
             }
         }
     })
-    botState.quickReplies.splice(0, botState.quickReplies.length, ...newShotcut)
+    return newShotcut
+}
+
+export async function updataInfoToBot(nodeList: any) {
+    const result = { functionMap: {}, quickRepliesFunctionTree: {} as any, userFunctionTree: {}, botFunctionTree: {}, firstTimeEntryTree: {} }
+
+
+    const { tree, nodes, relationshp } = getGraphTree(nodeList)
+    const functionMap = await getFunctionMap(nodeList, nodes)
+
+
+    for (let index = 0; index < Object.keys(tree).length; index++) {
+
+        const element = Object.keys(tree)[index];
+        // console.log(element,111111)
+        // console.log(functionMap.get(element).type,111111)
+        if (functionMap.get(element).type == 'userInput') {
+            result.userFunctionTree = tree[element]
+        } else if (functionMap.get(element).type == 'assistantInput') {
+            result.botFunctionTree = tree[element]
+        } else if (functionMap.get(element).type == 'firstTimeEntry') {
+            result.firstTimeEntryTree = tree[element]
+        } else if (functionMap.get(element).type == 'shortcutStatement') {
+            result.quickRepliesFunctionTree[functionMap.get(element).id] = tree[element]
+        }
+    }
+
+    result.functionMap = Object.fromEntries(functionMap)
+
+    return result
 }
 
 
@@ -670,7 +699,7 @@ export async function piplineAllFunction(item: any, inputData: any) {
                     break;
                 case 'function':
                     if (item.message.function.lang == 'javascript') {
-                        
+
                         const worker = getJsWorker(item.message.function.content)
                         const result = await new Promise((resolve, reject) => {
                             worker.onmessage = e => resolve(e.data);

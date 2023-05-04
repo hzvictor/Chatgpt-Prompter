@@ -1,10 +1,7 @@
-import { graphState } from '@/stores/graph';
+
 import styles from './index.less';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Dnd } from '@antv/x6-plugin-dnd';
 import { Stencil } from '@antv/x6-plugin-stencil';
-import { tabData } from '@/stores/tablist'
-import { Space } from 'antd';
 import './index.css';
 const commonAttrs = {
     body: {
@@ -14,9 +11,9 @@ const commonAttrs = {
     },
 };
 
-export default () => {
+export default ({graph}:any) => {
     const dndContainerRef: any = useRef(null);
-    const graph = graphState.graph;
+
 
     const stencil = new Stencil({
         title: 'Components',
@@ -63,6 +60,10 @@ export default () => {
 
 
     useEffect(() => {
+        console.log(graph,111111111)
+        if( !graph){
+            return
+        }
 
         const r3 = graph.createNode({
             shape: 'main-function-trigger',
@@ -221,7 +222,7 @@ export default () => {
 
         stencil.load([r36,r33, r35], 'history');
         dndContainerRef.current.appendChild(stencil.container);
-    }, [dndContainerRef]);
+    }, [dndContainerRef,graph]);
 
     return (
         <div className="dnd-wrap" ref={dndContainerRef}>

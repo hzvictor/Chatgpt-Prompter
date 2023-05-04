@@ -1,4 +1,5 @@
-import { MenuOutlined } from '@ant-design/icons';
+
+import { MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext } from '@dnd-kit/core';
 import {
@@ -11,13 +12,12 @@ import { CSS } from '@dnd-kit/utilities';
 import { makeNodeId } from '@/utils/withNodeId';
 import modifys from '@/stores/modify';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import type { InputRef } from 'antd';
+import { InputRef, Select } from 'antd';
 import { Button, Form, Input, Popconfirm, Table, Space, Row, Col } from 'antd';
 import type { FormInstance } from 'antd/es/form';
-import { useSnapshot } from 'valtio';
 import styles from './index.less';
 const { TextArea } = Input;
-const { modifyState } = modifys;
+import { updateChatbotDetail } from '@/database/prompter/chatbot'
 const EditableContext = React.createContext<FormInstance<any> | null>(null);
 
 interface Item {
@@ -65,7 +65,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
 
       toggleEdit();
       handleSave({ ...record, ...values });
-    } catch (errInfo) {}
+    } catch (errInfo) { }
   };
 
   let childNode = children;
@@ -178,70 +178,108 @@ const TableRow = ({ children, ...props }: RowProps) => {
   );
 };
 
-const App: React.FC = () => {
-  const dataSource = useSnapshot(modifyState.list);
-  // const modifyStateShot = useSnapshot(modifyState);
-  // const [dataSource, setDataSource] = useState([
-  //     {
-  //         key: '1',
-  //         prefix: 'Edward King 0',
-  //         suffix: 'London, Park Lane no. 0',
-  //     },
-  // ]);
+const App = ({ chatbotInfo }: any) => {
+
+  const [dataSource, setDataSource] = useState([
+    {
+      key: '1',
+      prefix: '',
+      suffix: '',
+    },
+    {
+      key: '2',
+      prefix: 'The prefix will be added in front of the user input as prompt',
+      suffix: 'The suffix is also a function of',
+    },
+  ]);
+
+  const [modify, setModify] = useState({ key: '1', prefix: '', suffix: '' })
+
+  useEffect(() => {
+    console.log(dataSource)
+    updateChatbotDetail(chatbotInfo.nanoid, { allModify: dataSource })
+  }, [dataSource])
+
+  useEffect(() => {
+    if (chatbotInfo.allModify) {
+      setDataSource(chatbotInfo.allModify)
+    }else{
+      setDataSource([
+        {
+          key: '1',
+          prefix: '',
+          suffix: '',
+        },
+        {
+          key: '2',
+          prefix: 'The prefix will be added in front of the user input as prompt',
+          suffix: 'The suffix is also a function of',
+        },
+      ])
+    }
+    if (chatbotInfo.modify) {
+      setModify(chatbotInfo.modify)
+    }else{
+      setModify( { key: '1', prefix: '', suffix: '' })
+     
+    }
+  }, [chatbotInfo])
 
   const defaultColumns: (ColumnTypes[number] & {
     editable?: boolean;
     dataIndex: string;
   })[] = [
-    {
-      key: 'sort',
-    },
+      {
+        key: 'sort',
+      },
 
-    {
-      title: 'Prefix',
-      dataIndex: 'prefix',
-      width: '38%',
-      editable: true,
-    },
-    {
-      title: 'Suffix',
-      width: '38%',
-      dataIndex: 'suffix',
-      editable: true,
-    },
-    {
-      title: 'operation',
-      dataIndex: 'operation',
-      render: (_, record: { key: React.Key }) =>
-        dataSource.length >= 1 ? (
-          <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.key)}
-          >
-            <a onMouseDown={(e) => e.stopPropagation()}>Delete</a>
-          </Popconfirm>
-        ) : null,
-    },
-  ];
+      {
+        title: 'Prefix',
+        dataIndex: 'prefix',
+        width: '38%',
+        editable: true,
+      },
+      {
+        title: 'Suffix',
+        width: '38%',
+        dataIndex: 'suffix',
+        editable: true,
+      },
+      {
+        title: 'delete',
+        dataIndex: 'delete',
+        align: "center",
+        render: (_, record: { key: React.Key }) =>
+          dataSource.length >= 1 ? (
+            <DeleteOutlined onClick={() => handleDelete(record.key)} />
+          ) : null,
+      },
+    ];
 
   const handleDelete = (key: React.Key) => {
-    const deletItemIndex = dataSource.findIndex((item) => item.key == key);
-    modifyState.list.splice(deletItemIndex, 1);
+    const newData = dataSource.filter((item) => item.key !== key);
+    setDataSource(newData);
   };
 
   const handleAdd = () => {
     const newData = {
       key: makeNodeId(),
-      prefix: `call me `,
-      suffix: `说中文`,
+      prefix: ``,
+      suffix: ``,
     };
-    modifyState.list.push(newData);
+    setDataSource([...dataSource, newData]);
   };
 
   const handleSave = (row) => {
-    const index = dataSource.findIndex((item) => row.key === item.key);
+    const newData = [...dataSource];
+    const index = newData.findIndex((item) => row.key === item.key);
+    const item = newData[index];
+    newData.splice(index, 1, {
+      ...item,
+      ...row,
+    });
 
-    modifyState.list.splice(index, 1, { ...row });
+    setDataSource(newData);
   };
 
   const columns = defaultColumns.map((col) => {
@@ -262,14 +300,26 @@ const App: React.FC = () => {
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (active.id !== over?.id) {
-      const activeIndex = dataSource.findIndex((i) => i.key === active.id);
-      const overIndex = dataSource.findIndex((i) => i.key === over?.id);
-      modifyState.list.splice(
-        0,
-        modifyState.list.length,
-        ...arrayMove(dataSource, activeIndex, overIndex),
-      );
+      setDataSource((previous) => {
+        const activeIndex = previous.findIndex((i) => i.key === active.id);
+        const overIndex = previous.findIndex((i) => i.key === over?.id);
+        return arrayMove(previous, activeIndex, overIndex);
+      });
     }
+  };
+
+
+
+
+  const rowSelection = {
+    onChange: (selectedRowKeys: any, selectedRows: any) => {
+      console.log('selectedRows: ', selectedRows);
+      if (selectedRows[0]) {
+        updateChatbotDetail(chatbotInfo.nanoid, { modify: selectedRows[0] })
+        setModify(selectedRows[0])
+      }
+
+    },
   };
 
   return (
@@ -284,6 +334,19 @@ const App: React.FC = () => {
             Add a row
           </Button>
         </Col>
+        <Col>
+          {/* Select Modify:&nbsp;&nbsp;
+          <Select
+            value={currentuse}
+            style={{ width: 120 }}
+            onChange={handleChange}
+            options={dataSource.map((item: any) => {
+              return { value: item?.apikey, label: item?.name }
+            })}
+          >
+
+          </Select> */}
+        </Col>
       </Row>
       <DndContext onDragEnd={onDragEnd}>
         <SortableContext
@@ -297,6 +360,11 @@ const App: React.FC = () => {
                 row: TableRow,
                 cell: EditableCell,
               },
+            }}
+            rowSelection={{
+              type: 'radio',
+              selectedRowKeys: [modify.key],
+              ...rowSelection,
             }}
             rowKey="key"
             pagination={false}

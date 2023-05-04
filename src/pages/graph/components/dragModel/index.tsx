@@ -6,7 +6,7 @@ import Draggable from 'react-draggable';
 import { graphState, dreawerState } from '@/stores/graph';
 
 
-export default () => {
+export default ({graph}:any) => {
 
     const [open, setOpen] = useState(false);
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
@@ -18,12 +18,12 @@ export default () => {
         setOpen(true);
     };
 
-    graphState.updataModel = (cell: any) => {
-        setCellSelf(cell)
-        setVal(cell.getData().index)
-        setTitle(cell.label)
-        showModal()
-    }
+    // graphState.updataModel = (cell: any) => {
+    //     setCellSelf(cell)
+    //     setVal(cell.getData().index)
+    //     setTitle(cell.label)
+    //     showModal()
+    // }
 
     const handleOk = (e: React.MouseEvent<HTMLElement>) => {
         

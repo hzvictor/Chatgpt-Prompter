@@ -28,6 +28,15 @@ export async function getProjectSlidelistList(projectid:string) {
     }
 }
 
+// export async function getActiveSlidelist( projectid:string) {
+//     try {
+//         const slidelist = await db.slidelist.where({'projectid':projectid,isActive: true}).first();
+//         return slidelist;
+//     } catch (error) {
+//         console.error(error);
+//     }
+// }
+
 
 
 export async function updateSlidelistDetail(nanoid: string, data: any) {

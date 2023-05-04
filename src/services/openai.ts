@@ -29,7 +29,22 @@ export async function chatToOpenai(params: any) {
             ...params
         })
     } else {
-        return chatToOpenaiLocal(info.currentuse, params)
+        return chatToOpenaiLocal(params)
+    }
+
+}
+
+export async function completionOpenai(params: any) {
+
+    const info = getInfo()
+
+    if (info.isUseServer) {
+        return completionOpenaiServer({
+            api_key: info.currentuse,
+            parameter:params
+        })
+    } else {
+        return completionOpenaiLocal(params)
     }
 
 }
@@ -175,6 +190,12 @@ export async function deletemodelToOpenai(params:any) {
 
 
 
+export async function completionOpenaiServer(params: any) {
+    return request('/openchat/completion', {
+        method: 'POST',
+        data: params,
+    });
+}
 export async function chatToOpenaiServer(params: any) {
     return request('/openchat/chat', {
         method: 'POST',
@@ -184,7 +205,7 @@ export async function chatToOpenaiServer(params: any) {
 
 export async function chatToOpenaiLocal(params: any) {
     try {
-
+        const info = getInfo()
         const { parameter, messages } = params
 
         const configuration = new Configuration({
@@ -197,10 +218,40 @@ export async function chatToOpenaiLocal(params: any) {
             ...parameter,
             model: "gpt-3.5-turbo",
             messages: messages,
+            api_key:info.currentuse,
         });
         return {
             code: 0,
             data: completion.data.choices[0]
+        }
+
+    } catch (error) {
+        notification.error({
+            description: JSON.stringify(error),
+            message: 'Open api error',
+            placement: 'topLeft',
+        });
+        return {
+            code: 0,
+            data: ''
+        }
+    }
+
+}
+
+export async function completionOpenaiLocal(params: any) {
+    try {
+        const info = getInfo()
+
+        const configuration = new Configuration({
+            apiKey:info.currentuse,
+        });
+
+        const openai = new OpenAIApi(configuration);
+        const response = await openai.createCompletion(params);
+        return {
+            code: 0,
+            data: response.data.choices[0]
         }
 
     } catch (error) {
