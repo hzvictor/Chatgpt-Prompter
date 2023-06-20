@@ -4,8 +4,7 @@ import '../public/assets/js/chatui.js'
 import { message } from 'antd'
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-import { getDvaApp } from 'umi';
-import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
+
 
 
 

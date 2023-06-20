@@ -5,28 +5,23 @@ import { useEffect, useState } from 'react';
 import ModifyString from '../modifyString';
 import BaseSetting from '../baseSetting';
 import { history } from 'umi';
-import botStore from '@/stores/bot';
-import { upOrLeftState } from '@/stores/globalFunction';
-import { chatFunction } from '@/stores/globalFunction'
 import { updateChatbotDetail } from '@/database/prompter/chatbot'
-import { currentFunction } from '@/stores/function'
-import { makeNodeId } from '@/utils/withNodeId';
 import CodeEditor from '@/components/apureComponents/codeEditor';
-import { getTargetFunctions, } from '@/database/functions'
-import { extractFunctions, findPythonFunctionNames, removePythonComments, removeJavascriptComments, jsToPythonFunctionWithComments, pythonToJsFunction } from '@/utils/little'
-
-export default ({chatbotInfo,resetList,setHistory}:any) => {
+import { removeJavascriptComments } from '@/utils/little'
+import { getTargetFunctions } from '@/database/prompter/function'
+export default ({ chatbotInfo, resetList, setHistory }: any) => {
   const [open, setOpen] = useState(false);
   const [openCode, setOpenCode] = useState(false);
   const [chatbotName, setChatbotName] = useState('Promter');
+  const [codeConfig, setCodeConfig] = useState()
 
-  useEffect(()=>{
-    if(chatbotInfo.botConfig && chatbotInfo.botConfig.name){
+  useEffect(() => {
+    if (chatbotInfo.botConfig && chatbotInfo.botConfig.name) {
       setChatbotName(chatbotInfo.botConfig.name)
-    }else{
+    } else {
       setChatbotName('Promter')
     }
-  },[chatbotInfo])
+  }, [chatbotInfo])
 
   const showDrawer = () => {
     setOpen(true);
@@ -39,39 +34,27 @@ export default ({chatbotInfo,resetList,setHistory}:any) => {
   const onCloseCode = () => {
     showDrawer()
     setOpenCode(false);
-    getTargetFunctions(botStore.botState.strategyId).then(res => {
-      let CODE: string;
-      if (res.lang == 'javascript') {
-        CODE = removeJavascriptComments(res.code)
-        CODE = CODE.trim()
-      } else {
-        CODE = removePythonComments(res.code)
-        CODE = CODE.trim()
-      }
-      botStore.botState.historyFunction = {
-        lang: res.lang ,
-        code: CODE
-      }  
+    getTargetFunctions(chatbotInfo.nanoid).then(res => {
+      let CODE = removeJavascriptComments(res.code)
+      CODE = CODE.trim()
+      updateChatbotDetail(chatbotInfo.nanoid,{historyFunction:CODE})
     })
+
   };
   const showDefaultCode = () => {
     onClose()
     setOpenCode(true);
 
-    if (botStore.botState.strategyId != '') {
-      currentFunction.id = botStore.botState.strategyId
-    } else {
-      const id = makeNodeId()
-      botStore.botState.strategyId = id
-      currentFunction.id = makeNodeId()
-    }
-    currentFunction.type = 'history'
+    setCodeConfig({
+      id: chatbotInfo.nanoid, type: 'history'
+    })
   };
 
+
+
+
   const jumpToBotEditor = () => {
-    upOrLeftState.upOrLeft = true;
-    // upOrLeftState.lastLocation.push('/boteditor')
-    history.push(`/editor/graph/chatbot/${chatbotInfo.nanoid}`);
+    history.push(`/editor/graph/chatbot/${chatbotInfo.projectid}`);
   };
 
   const resetHistory = () => {
@@ -125,7 +108,7 @@ export default ({chatbotInfo,resetList,setHistory}:any) => {
         open={openCode}
         size="large"
       >
-        <CodeEditor onMouseDown={(e) => e.stopPropagation()} onCloseCode={onCloseCode}></CodeEditor>
+        <CodeEditor codeConfig={codeConfig} onCloseCode={onCloseCode}></CodeEditor>
         {openCode && (
           <Button
             type="primary"
@@ -164,7 +147,7 @@ export default ({chatbotInfo,resetList,setHistory}:any) => {
             <BaseSetting chatbotInfo={chatbotInfo} setChatbotName={setChatbotName} showDrawer={showDefaultCode}  ></BaseSetting>
           </Col>
           <Col style={{ height: '600px', overflow: 'scroll' }} span={12}>
-            <ModifyString  chatbotInfo={chatbotInfo} ></ModifyString>
+            <ModifyString chatbotInfo={chatbotInfo} ></ModifyString>
           </Col>
         </Row>
       </Drawer>

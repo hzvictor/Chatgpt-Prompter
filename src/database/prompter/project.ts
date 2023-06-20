@@ -51,63 +51,133 @@ export async function newProject(
 ) {
     try {
 
-        const layoutConfig = {
-            isDraggable: false,
-            isResizable: true,
-            showParameter: true,
-            showTuning: true,
-            showTest: true,
-            showChat: true,
-            layoutGrid: [
-                {
-                    "w": 6,
-                    "h": 19,
-                    "x": 18,
-                    "y": 0,
-                    "i": "chat",
-                    "moved": false,
-                    "static": false
-                },
-                {
-                    "w": 13,
-                    "h": 30,
-                    "x": 5,
-                    "y": 0,
-                    "i": "tuning",
-                    "moved": false,
-                    "static": false
-                },
-                {
-                    "w": 5,
-                    "h": 27,
-                    "x": 0,
-                    "y": 3,
-                    "i": "slideList",
-                    "moved": false,
-                    "static": false
-                },
-                {
-                    "w": 5,
-                    "h": 3,
-                    "x": 0,
-                    "y": 0,
-                    "i": "manager",
-                    "moved": false,
-                    "static": false
-                },
-                {
-                    "w": 6,
-                    "h": 11,
-                    "x": 18,
-                    "y": 19,
-                    "i": "test",
-                    "moved": false,
-                    "static": false
+        let layoutConfig = {}
+
+        const key = type + '_' + model
+
+        console.log(key,22222222)
+
+        switch (key) {
+            case 'chatbot_davinaci':
+                layoutConfig = {
+                    isDraggable: false,
+                    isResizable: true,
+                    showParameter: true,
+                    showTuning: true,
+                    showTest: true,
+                    showChat: true,
+                    layoutGrid: [
+                        {
+                            "w": 6,
+                            "h": 19,
+                            "x": 18,
+                            "y": 0,
+                            "i": "chat",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 13,
+                            "h": 30,
+                            "x": 5,
+                            "y": 0,
+                            "i": "tuning",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 5,
+                            "h": 27,
+                            "x": 0,
+                            "y": 3,
+                            "i": "slideList",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 5,
+                            "h": 3,
+                            "x": 0,
+                            "y": 0,
+                            "i": "manager",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 6,
+                            "h": 11,
+                            "x": 18,
+                            "y": 19,
+                            "i": "test",
+                            "moved": false,
+                            "static": false
+                        }
+                    ],
                 }
-            ],
-            // showLogitBias:false,
+                break;
+            case 'chatbot_turbo':
+                layoutConfig = {
+                    isDraggable: false,
+                    isResizable: true,
+                    showParameter: true,
+                    showPrompt: true,
+                    showTest: true,
+                    showChat: true,
+                    layoutGrid: [
+                        {
+                            "w": 6,
+                            "h": 19,
+                            "x": 18,
+                            "y": 0,
+                            "i": "chat",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 13,
+                            "h": 30,
+                            "x": 5,
+                            "y": 0,
+                            "i": "prompt",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 5,
+                            "h": 27,
+                            "x": 0,
+                            "y": 3,
+                            "i": "slideList",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 5,
+                            "h": 3,
+                            "x": 0,
+                            "y": 0,
+                            "i": "manager",
+                            "moved": false,
+                            "static": false
+                        },
+                        {
+                            "w": 6,
+                            "h": 11,
+                            "x": 18,
+                            "y": 19,
+                            "i": "test",
+                            "moved": false,
+                            "static": false
+                        }
+                    ],
+                }
+                break
+            default:
+                break;
         }
 
+
+        console.log(layoutConfig,3333333333)
 
         await db.project.put({
             nanoid: makeNodeId(),

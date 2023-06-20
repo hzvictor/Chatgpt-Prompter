@@ -41,7 +41,7 @@ export async function completionOpenai(params: any) {
     if (info.isUseServer) {
         return completionOpenaiServer({
             api_key: info.currentuse,
-            parameter:params
+            parameter: params
         })
     } else {
         return completionOpenaiLocal(params)
@@ -65,15 +65,15 @@ export async function filesListToOpenai() {
 }
 
 
-export async function fileUploadToOpenai(params:any) {
+export async function fileUploadToOpenai(params: any) {
 
     const info = getInfo()
     if (!info) return
     return request('/openchat/uploadfile', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            jsonl:params
+            api_key: info.currentuse,
+            jsonl: params
         },
     });
 }
@@ -85,71 +85,71 @@ export async function listfilesToOpenai() {
     return request('/openchat/listfiles', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
+            api_key: info.currentuse,
         },
     });
 }
 
 
-export async function fileDeleteToOpenai(params:any) {
+export async function fileDeleteToOpenai(params: any) {
 
     const info = getInfo()
     if (!info) return
     return request('/openchat/deleteFile', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            fileid:params
+            api_key: info.currentuse,
+            fileid: params
         },
     });
 }
-export async function downloadfileToOpenai(params:any) {
+export async function downloadfileToOpenai(params: any) {
 
     const info = getInfo()
     if (!info) return
     return request('/openchat/downloadfile', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            fileid:params
+            api_key: info.currentuse,
+            fileid: params
         },
     });
 }
-export async function retrievefileToOpenai(params:any) {
+export async function retrievefileToOpenai(params: any) {
 
     const info = getInfo()
     if (!info) return
     return request('/openchat/retrievefile', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            fileid:params
+            api_key: info.currentuse,
+            fileid: params
         },
     });
 }
 
 
-export async function fileTrainToOpenai(params:any) {
+export async function fileTrainToOpenai(params: any) {
 
     const info = getInfo()
     if (!info) return
     return request('/openchat/train', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
+            api_key: info.currentuse,
             ...params
         },
     });
 }
 
-export async function retrieveFTToOpenai(params:any) {
+export async function retrieveFTToOpenai(params: any) {
     const info = getInfo()
     if (!info) return
     return request('/openchat/retrieveft', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            ftid:params
+            api_key: info.currentuse,
+            ftid: params
         },
     });
 }
@@ -161,29 +161,29 @@ export async function listfinetunesToOpenai() {
     return request('/openchat/listfinetunes', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
+            api_key: info.currentuse,
         },
     });
 }
-export async function cancelfinetuneToOpenai(params:any) {
+export async function cancelfinetuneToOpenai(params: any) {
     const info = getInfo()
     if (!info) return
     return request('/openchat/cancelfinetune', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            ftid:params
+            api_key: info.currentuse,
+            ftid: params
         },
     });
 }
-export async function deletemodelToOpenai(params:any) {
+export async function deletemodelToOpenai(params: any) {
     const info = getInfo()
     if (!info) return
     return request('/openchat/deletemodel', {
         method: 'POST',
         data: {
-            api_key:info.currentuse,
-            ftname:params
+            api_key: info.currentuse,
+            ftname: params
         },
     });
 }
@@ -197,9 +197,14 @@ export async function completionOpenaiServer(params: any) {
     });
 }
 export async function chatToOpenaiServer(params: any) {
+    const info = getInfo()
+
     return request('/openchat/chat', {
         method: 'POST',
-        data: params,
+        data: {
+            api_key: info.currentuse,
+            parameter: params
+        },
     });
 }
 
@@ -218,7 +223,7 @@ export async function chatToOpenaiLocal(params: any) {
             ...parameter,
             model: "gpt-3.5-turbo",
             messages: messages,
-            api_key:info.currentuse,
+            api_key: info.currentuse,
         });
         return {
             code: 0,
@@ -244,7 +249,7 @@ export async function completionOpenaiLocal(params: any) {
         const info = getInfo()
 
         const configuration = new Configuration({
-            apiKey:info.currentuse,
+            apiKey: info.currentuse,
         });
 
         const openai = new OpenAIApi(configuration);

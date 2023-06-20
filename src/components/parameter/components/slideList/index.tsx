@@ -1,6 +1,6 @@
 import styles from './index.less';
 import { Slider, Row, Col, Tooltip, InputNumber } from 'antd';
-import TabList from '@/components/apureComponents/tabList';
+
 import slideListsStore from '@/stores/slideLists';
 import { useSnapshot } from 'valtio';
 
@@ -71,13 +71,7 @@ export default function IndexPage() {
       <Row>
         {/* <Col className={styles.headerTitle} span={5} > Parameter</Col> */}
         <Col span={24}>
-          <TabList
-            defaultName="Parameter"
-            addNewTab={addNewTab}
-            changeTab={changeTab}
-            removeTab={removeTab}
-            activeKeyName="slideListId"
-          ></TabList>
+
         </Col>
       </Row>
       <div className={styles.rowLine}>

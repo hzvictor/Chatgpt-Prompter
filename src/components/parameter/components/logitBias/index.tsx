@@ -14,7 +14,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { makeNodeId } from '@/utils/withNodeId';
 import logitBiasStore from '@/stores/logitBias';
-import TabList from '@/components/apureComponents/tabList';
+
 import slideListsStore from '@/stores/slideLists';
 import {
   storeLogitBias,
@@ -119,6 +119,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
           />
         ) : (
           <TextArea
+          autoSize={true}
             onMouseDown={(e) => e.stopPropagation()}
             ref={inputRef}
             onPressEnter={save}
@@ -342,13 +343,7 @@ const App: React.FC = () => {
       <Row>
         {/* <Col className={styles.headerTitle} span={5} > Parameter</Col> */}
         <Col span={24}>
-          <TabList
-            defaultName="Logit Bias"
-            addNewTab={addNewTab}
-            changeTab={changeTab}
-            removeTab={removeTab}
-            activeKeyName="logitBiasId"
-          ></TabList>
+
         </Col>
       </Row>
 

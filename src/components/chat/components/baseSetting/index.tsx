@@ -32,6 +32,12 @@ const App = ({ showDrawer, chatbotInfo, setChatbotName }: any) => {
     form.resetFields()
     }
 
+    if(chatbotInfo.botConfig?.historyStrategy == 'function' ){
+      setShowHistoryEditorButton(true)
+    }else{
+      setShowHistoryEditorButton(false)
+    }
+
     if (chatbotInfo.botConfig?.avatar) {
       setImgUrl(chatbotInfo.botConfig.avatar)
     }else{

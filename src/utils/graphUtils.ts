@@ -1,7 +1,5 @@
 import { getTargetFunctions } from '@/database/functions'
-import { extractFunctions, findPythonFunctionNames, removePythonComments, removeJavascriptComments, jsToPythonFunctionWithComments, pythonToJsFunction } from '@/utils/little'
-import { Result } from 'antd'
-import botStore from '@/stores/bot'
+import { removeJavascriptComments } from '@/utils/little'
 import conversationStore from '@/stores/conversation';
 import systemStore from '@/stores/system';
 import logitBiasStore from '@/stores/logitBias';
@@ -15,14 +13,11 @@ const { logitBiasState } = logitBiasStore;
 const { systemState } = systemStore;
 const { messageHistoryState } = messageHistoryStore;
 const { modifyState } = modifyStore;
-import { chatFunction } from '@/stores/globalFunction';
 import { notification } from 'antd';
-import { asyncRun } from "@/utils/pyworker/pyworker.js";
 import { getJsWorker } from '@/utils/handelFunction'
-import { graphState } from '@/stores/graph';
+// import { graphState } from '@/stores/graph';
 
 
-const { botState } = botStore
 export const getNodeType = (targetId: string, nodeList: any) => {
     const targetNode = nodeList.find((item: any) => item.id == targetId)
     return targetNode
@@ -89,7 +84,7 @@ export const getGraphTree = (nodeList: any) => {
 }
 
 function removeDuplicates(tree: any) {
-    const hashTable = {};
+    const hashTable = {} as any;
 
     function traverse(node) {
         if (!tree[node]) {
@@ -118,8 +113,8 @@ function removeDuplicates(tree: any) {
 
 
 function buildTree(input: any) {
-    const tree = {};
-    const nodes = {};
+    const tree = {} as any;
+    const nodes = {} as any;
 
     // 构建节点映射
     for (const { sourceid, targetid } of input) {
@@ -144,33 +139,15 @@ const sampleFunction = `function sampleFunction (){
     return true
 }`
 
-type Root = {
-    type: 'root';
-    lang?: string;
-    function?: {
-        lang: string;
-        code: string;
-    };
-    message?: {
-        messageType: string;
-        content: string;
-    };
-    modify?: string;
-    prompt?: string;
-};
+
 
 
 async function handMainFunctionTrigger(map: any, item: any) {
     const res = await getTargetFunctions(item.id)
     if (res && res.code.length > 0 && res.isPass == true) {
         let CODE: string;
-        if (res.lang == 'javascript') {
-            CODE = removeJavascriptComments(res.code)
-            CODE = CODE.trim()
-        } else {
-            CODE = removePythonComments(res.code)
-            CODE = CODE.trim()
-        }
+        CODE = removeJavascriptComments(res.code)
+        CODE = CODE.trim()
 
         const bottomPorts = item.ports.items.filter((item: any) => item.group == 'bottom')
         bottomPorts.forEach((bottomItem: any) => {
@@ -179,10 +156,8 @@ async function handMainFunctionTrigger(map: any, item: any) {
                     type: 'trigger',
                     id: item.id,
                     function: {
-
                         content: CODE,
                         triggerType: true,
-                        lang: res.lang,
                     }
                 })
             } else {
@@ -190,10 +165,8 @@ async function handMainFunctionTrigger(map: any, item: any) {
                     type: 'trigger',
                     id: item.id,
                     function: {
-
                         content: CODE,
                         triggerType: false,
-                        lang: res.lang,
                     }
                 })
             }
@@ -227,8 +200,8 @@ function exchangeForml(formula: string) {
 
 function handMessageIndex(map: any, item: any) {
     const formula = exchangeForml(item.data.formula)
-    const code = `function Trigger(inputContent, promptInfo) {
-        if(promptInfo.index.${item.data.role} ${formula} ${item.data.index}){
+    const code = `function Trigger(inputData) {
+        if(inputData.index.${item.data.role} ${formula} ${item.data.index}){
             return true
         } else{
             return false
@@ -248,7 +221,7 @@ function handMessageIndex(map: any, item: any) {
 
 function handStringLength(map: any, item: any) {
     const formula = exchangeForml(item.data.formula)
-    const code = `function Trigger(inputContent, promptInfo) {
+    const code = `function Trigger(inputData) {
         if(inputContent.length ${formula} ${item.data.index}){
             return true
         } else{
@@ -271,8 +244,8 @@ function handMatchString(map: any, item: any) {
     let code = ''
     if (item.data.formula == 'equal' || item.data.formula == 'notequal') {
         const formula = exchangeForml(item.data.formula)
-        code = `function Trigger(inputContent, promptInfo) {
-        if(promptInfo.index.${item.data.role} ${formula} ${item.data.index}){
+        code = `function Trigger(inputData) {
+        if(inputData.index.${item.data.role} ${formula} ${item.data.index}){
             return true
         } else{
             return false
@@ -280,8 +253,8 @@ function handMatchString(map: any, item: any) {
         
     }`
     } else if (item.data.formula == 'contains') {
-        code = `function Trigger(inputContent, promptInfo) {
-            if(inputContent.includes('${item.data.string}')){
+        code = `function Trigger(inputData) {
+            if(inputData.input.content.text.includes('${item.data.string}')){
                 return true
             } else{
                 return false
@@ -289,8 +262,8 @@ function handMatchString(map: any, item: any) {
             
         }`
     } else if (item.data.formula == 'notContains') {
-        code = `function Trigger(inputContent, promptInfo) {
-            if(!inputContent.includes('${item.data.string}')){
+        code = `function Trigger(inputData) {
+            if(!inputData.input.content.text.includes('${item.data.string}')){
                 return true
             } else{
                 return false
@@ -298,8 +271,8 @@ function handMatchString(map: any, item: any) {
             
         }`
     } else if (item.data.formula == 'startsWith') {
-        code = `function Trigger(inputContent, promptInfo) {
-            if(!inputContent.startsWith('${item.data.string}')){
+        code = `function Trigger(inputData) {
+            if(!inputData.input.content.text.startsWith('${item.data.string}')){
                 return true
             } else{
                 return false
@@ -307,8 +280,8 @@ function handMatchString(map: any, item: any) {
             
         }`
     } else if (item.data.formula == 'endsWith') {
-        code = `function Trigger(inputContent, promptInfo) {
-            if(!inputContent.endsWith('${item.data.string}')){
+        code = `function Trigger(inputData) {
+            if(!inputData.input.content.text.endsWith('${item.data.string}')){
                 return true
             } else{
                 return false
@@ -347,13 +320,9 @@ async function handSendStringFunction(map: any, item: any) {
     const res = await getTargetFunctions(item.id)
     if (res && res.code.length > 0 && res.isPass == true) {
         let CODE: string;
-        if (res.lang == 'javascript') {
-            CODE = removeJavascriptComments(res.code)
-            CODE = CODE.trim()
-        } else {
-            CODE = removePythonComments(res.code)
-            CODE = CODE.trim()
-        }
+        CODE = removeJavascriptComments(res.code)
+        CODE = CODE.trim()
+
         map.set(item.id, {
             type: 'message',
             id: item.id,
@@ -361,7 +330,6 @@ async function handSendStringFunction(map: any, item: any) {
                 type: 'function',
                 function: {
                     content: CODE,
-                    lang: res.lang,
                 }
             },
         })
@@ -375,11 +343,12 @@ async function handSendStringFunction(map: any, item: any) {
 
 
 function handReplaceString(map: any, item: any) {
-    let code = `function Replace(inputContent, promptInfo) {
-        let str = "Hello World";
-        let newStr = inputContent.replace(/${item.data.string}/g, "${item.data.replace}");
+    let code = `function Replace(inputData) {
+        let newStr = inputData.input.content.text.replace(/${item.data.string}/g, "${item.data.replace}");
         return newStr
     }`
+
+    // console.log(code, item,99999999)
     map.set(item.id, {
         type: 'replace',
         id: item.id,
@@ -387,7 +356,6 @@ function handReplaceString(map: any, item: any) {
         replacePart: 'input',
         function: {
             content: code,
-            lang: 'javascript',
         }
     })
 }
@@ -408,20 +376,25 @@ function handReplaceModify(map: any, item: any) {
         id: item.id,
         replaceType: 'straight',
         replacePart: 'modify',
-        modify: item.data.modify
+        modify: item.data
+    })
+}
+
+function handReplaceParameter(map: any, item: any) {
+    map.set(item.id, {
+        type: 'replace',
+        id: item.id,
+        replaceType: 'straight',
+        replacePart: 'parameter',
+        parameter: item.data
     })
 }
 async function handReplaceModifyFunction(map: any, item: any) {
     const res = await getTargetFunctions(item.id)
     if (res && res.code.length > 0 && res.isPass == true) {
         let CODE: string;
-        if (res.lang == 'javascript') {
-            CODE = removeJavascriptComments(res.code)
-            CODE = CODE.trim()
-        } else {
-            CODE = removePythonComments(res.code)
-            CODE = CODE.trim()
-        }
+        CODE = removeJavascriptComments(res.code)
+        CODE = CODE.trim()
         map.set(item.id, {
             type: 'replace',
             id: item.id,
@@ -429,7 +402,6 @@ async function handReplaceModifyFunction(map: any, item: any) {
             replacePart: 'modify',
             function: {
                 content: CODE,
-                lang: res.lang,
             }
         })
     } else {
@@ -444,13 +416,10 @@ async function handReplaceStringFunction(map: any, item: any) {
 
     if (res && res.code.length > 0 && res.isPass == true) {
         let CODE: string;
-        if (res.lang == 'javascript') {
-            CODE = removeJavascriptComments(res.code)
-            CODE = CODE.trim()
-        } else {
-            CODE = removePythonComments(res.code)
-            CODE = CODE.trim()
-        }
+
+        CODE = removeJavascriptComments(res.code)
+        CODE = CODE.trim()
+
         map.set(item.id, {
             type: 'replace',
             id: item.id,
@@ -458,7 +427,6 @@ async function handReplaceStringFunction(map: any, item: any) {
             replacePart: 'input',
             function: {
                 content: CODE,
-                lang: res.lang,
             }
         })
     } else {
@@ -473,13 +441,10 @@ async function handReplacePromptFunction(map: any, item: any) {
 
     if (res && res.code.length > 0 && res.isPass == true) {
         let CODE: string;
-        if (res.lang == 'javascript') {
-            CODE = removeJavascriptComments(res.code)
-            CODE = CODE.trim()
-        } else {
-            CODE = removePythonComments(res.code)
-            CODE = CODE.trim()
-        }
+
+        CODE = removeJavascriptComments(res.code)
+        CODE = CODE.trim()
+
         map.set(item.id, {
             type: 'replace',
             id: item.id,
@@ -487,7 +452,6 @@ async function handReplacePromptFunction(map: any, item: any) {
             replacePart: 'prompt',
             function: {
                 content: CODE,
-                lang: res.lang,
             }
         })
     } else {
@@ -503,13 +467,10 @@ async function handReplaceHistoryStrategyFunction(map: any, item: any) {
 
     if (res && res.code.length > 0 && res.isPass == true) {
         let CODE: string;
-        if (res.lang == 'javascript') {
-            CODE = removeJavascriptComments(res.code)
-            CODE = CODE.trim()
-        } else {
-            CODE = removePythonComments(res.code)
-            CODE = CODE.trim()
-        }
+
+        CODE = removeJavascriptComments(res.code)
+        CODE = CODE.trim()
+
         map.set(item.id, {
             type: 'replace',
             id: item.id,
@@ -517,7 +478,6 @@ async function handReplaceHistoryStrategyFunction(map: any, item: any) {
             replacePart: 'historyFunction',
             historyFunction: {
                 content: CODE,
-                lang: res.lang,
             }
         })
     } else {
@@ -585,12 +545,16 @@ export async function getFunctionMap(nodeList: any, nodes: any) {
                     break;
                 case 'replace-string-node':
                     handReplaceString(functionoMap, item)
+                    
                     break;
                 case 'replace-prompt-node':
                     handReplacePrompt(functionoMap, item)
                     break;
                 case 'replace-modify-node':
                     handReplaceModify(functionoMap, item)
+                    break;
+                case 'replace-parameter-node':
+                    handReplaceParameter(functionoMap, item)
                     break;
                 case 'function-replace-message':
                     await handReplaceStringFunction(functionoMap, item)
@@ -682,6 +646,7 @@ export async function updataInfoToBot(nodeList: any) {
 
 
 export async function piplineAllFunction(item: any, inputData: any) {
+
     const treeFuntionResult: any = {
         isContinue: true,
     }
@@ -690,153 +655,74 @@ export async function piplineAllFunction(item: any, inputData: any) {
             switch (item.message.type) {
                 case 'text':
                     // chatFunction.assistantSend('text', item.message.content)
-                    treeFuntionResult.sendUsermessage = [{ type: 'text', content: item.message.content }]
+                    treeFuntionResult.sendUsermessage = [{ type: 'text', content: {text:item.message.content} }]
                     break;
                 case 'image':
                     treeFuntionResult.sendUsermessage = item.message.pictureList.map((selfItem: any) => {
-                        return { type: 'image', content: selfItem }
+                        return { type: 'image', content: {picUrl:selfItem} }
                     })
                     break;
                 case 'function':
-                    if (item.message.function.lang == 'javascript') {
 
-                        const worker = getJsWorker(item.message.function.content)
-                        const result = await new Promise((resolve, reject) => {
-                            worker.onmessage = e => resolve(e.data);
-                            worker.onerror = e => {
-                                notification.error({
-                                    description: JSON.stringify(e),
-                                    message: 'Send Message Function Error',
-                                    placement: 'topLeft',
-                                });
-                                reject(e)
-                            };
-                            worker.postMessage(inputData);
-                        });
-
-                        treeFuntionResult.sendUsermessage = [{ type: 'text', content: result }]
-
-                    } else {
-                        const pythonFunctionList = findPythonFunctionNames(item.message.function.content)
-                        const script =
-                            `from js import inputContent
-from js import promptInfo
-${item.message.function.content}
-${pythonFunctionList[0]}(inputContent,promptInfo)`;
-
-                        const context = {
-                            inputContent: inputData.input,
-                            promptInfo: inputData
-                        };
-
-                        const { results, error } = await asyncRun(script, context);
-                        if (JSON.stringify(results)) {
-                            treeFuntionResult.sendUsermessage = [{ type: 'text', content: results }]
-                        } else {
-                            notification.error({
-                                description: JSON.stringify(error),
-                                message: 'Send Message Function Error',
-                                placement: 'topLeft',
-                            });
-                        }
-                    }
-                    break
-                default:
-                    break;
-            }
-            break
-        case 'trigger':
-            if (item.function.lang == 'javascript') {
-                const worker = getJsWorker(item.function.content)
-                const result = await new Promise((resolve, reject) => {
-                    worker.onmessage = e => resolve(e.data);
-                    worker.onerror = e => {
-                        notification.error({
-                            description: JSON.stringify(e),
-                            message: 'Trigger Function Error',
-                            placement: 'topLeft',
-                        });
-                        reject(e)
-                    };
-                    worker.postMessage(inputData);
-                });
-                if (item.function.triggerType) {
-                    treeFuntionResult.isContinue = !!result
-                } else {
-                    treeFuntionResult.isContinue = !result
-                }
-
-            } else {
-                const pythonFunctionList = findPythonFunctionNames(item.function.content)
-                const script =
-                    `from js import inputContent
-from js import promptInfo
-${item.function.content}
-${pythonFunctionList[0]}(inputContent,promptInfo)`;
-
-                const context = {
-                    inputContent: inputData.input,
-                    promptInfo: inputData
-                };
-
-                const { results, error } = await asyncRun(script, context);
-                if (JSON.stringify(results)) {
-                    if (item.function.triggerType) {
-                        treeFuntionResult.isContinue = results
-                    } else {
-                        treeFuntionResult.isContinue = !results
-                    }
-                } else {
-                    notification.error({
-                        description: JSON.stringify(error),
-                        message: 'Trigger Function Error',
-                        placement: 'topLeft',
-                    });
-                    treeFuntionResult.isContinue = false
-                }
-            }
-            break
-        case 'replace':
-            if (item.replaceType == 'function') {
-                if (item.function.lang == 'javascript') {
-                    const worker = getJsWorker(item.function.content)
+                    const worker = getJsWorker(item.message.function.content)
                     const result = await new Promise((resolve, reject) => {
                         worker.onmessage = e => resolve(e.data);
                         worker.onerror = e => {
                             notification.error({
                                 description: JSON.stringify(e),
-                                message: 'Replace Words Function Error',
+                                message: 'Send Message Function Error',
                                 placement: 'topLeft',
                             });
                             reject(e)
                         };
                         worker.postMessage(inputData);
                     });
-                    treeFuntionResult[item.replacePart] = result as any
-                } else {
-                    const pythonFunctionList = findPythonFunctionNames(item.function.content)
-                    const script =
-                        `from js import inputContent
-from js import promptInfo
-${item.function.content}
-${pythonFunctionList[0]}(inputContent,promptInfo)`;
 
-                    const context = {
-                        inputContent: inputData.input,
-                        promptInfo: inputData
-                    };
+                    treeFuntionResult.sendUsermessage = [{ type: 'text', content: result }]
 
-                    const { results, error } = await asyncRun(script, context);
-                    if (JSON.stringify(results)) {
-                        treeFuntionResult[item.replacePart] = results as any
-                    } else {
+
+                    break
+                default:
+                    break;
+            }
+            break
+        case 'trigger':
+            const worker = getJsWorker(item.function.content)
+            const result = await new Promise((resolve, reject) => {
+                worker.onmessage = e => resolve(e.data);
+                worker.onerror = e => {
+                    notification.error({
+                        description: JSON.stringify(e),
+                        message: 'Trigger Function Error',
+                        placement: 'topLeft',
+                    });
+                    reject(e)
+                };
+                worker.postMessage(inputData);
+            });
+            if (item.function.triggerType) {
+                treeFuntionResult.isContinue = !!result
+            } else {
+                treeFuntionResult.isContinue = !result
+            }
+
+            break
+        case 'replace':
+            if (item.replaceType == 'function') {
+                const worker = getJsWorker(item.function.content)
+                const result = await new Promise((resolve, reject) => {
+                    worker.onmessage = e => resolve(e.data);
+                    worker.onerror = e => {
                         notification.error({
-                            description: JSON.stringify(error),
-                            message: 'Replace Words Error',
+                            description: JSON.stringify(e),
+                            message: 'Replace Words Function Error',
                             placement: 'topLeft',
                         });
-                    }
-                }
+                        reject(e)
+                    };
+                    worker.postMessage(inputData);
+                });
+                treeFuntionResult[item.replacePart] = result as any
             } else {
                 treeFuntionResult[item.replacePart] = item[item.replacePart]
             }
@@ -852,12 +738,12 @@ ${pythonFunctionList[0]}(inputContent,promptInfo)`;
             treeFuntionResult.clearHistory = true
             break
         case 'error':
-            const node = graphState.graph.findViewByCell(item.id)
-            treeFuntionResult.isContinue = false
-            node.cell.attr("body/fill", "#DB4D6D");
-            setTimeout(() => {
-                node.cell.attr("body/fill", "#EFF4FF");
-            }, 3000)
+            // const node = graphState.graph.findViewByCell(item.id)
+            // treeFuntionResult.isContinue = false
+            // node.cell.attr("body/fill", "#DB4D6D");
+            // setTimeout(() => {
+            //     node.cell.attr("body/fill", "#EFF4FF");
+            // }, 3000)
             notification.error({
                 description: 'You have some functions that fail the test',
                 message: 'Function Error',
@@ -875,28 +761,8 @@ ${pythonFunctionList[0]}(inputContent,promptInfo)`;
 
 
 export function getRealData(input: string, role: string) {
-    let systemMessage = snapshot(systemState.message);
-    let conversationMessage = snapshot(conversationState.message);
-    let messageHistorynList = snapshot(messageHistoryState.list);
 
-    const { list } = snapshot(modifyState);
-    const { logitBiasArray } = snapshot(logitBiasState);
-
-    return {
-        input: input,
-        role: role,
-        index: {
-            all: messageHistorynList.length,
-            assistant: messageHistorynList.filter((item: any) => item.role == "assistant").length,
-            user: messageHistorynList.filter((item: any) => item.role == "user").length,
-        },
-        system: systemMessage,
-        conversation: conversationMessage,
-        modify: list[0] ? list[0] : { prefix: "", suffix: '' },
-        history: messageHistorynList,
-        parameter: snapshot(slideListsState),
-        logitBiasArray: logitBiasArray
-    }
+   
 }
 
 
@@ -960,3 +826,29 @@ function compareObj(source: any, target: any) {
     }
     return different
 }
+
+
+// {
+//     const pythonFunctionList = findPythonFunctionNames(item.function.content)
+//     const script =
+//         `from js import inputContent
+// from js import promptInfo
+// ${item.function.content}
+// ${pythonFunctionList[0]}(inputContent,promptInfo)`;
+
+//     const context = {
+//         inputContent: inputData.input,
+//         promptInfo: inputData
+//     };
+
+//     const { results, error } = await asyncRun(script, context);
+//     if (JSON.stringify(results)) {
+//         treeFuntionResult[item.replacePart] = results as any
+//     } else {
+//         notification.error({
+//             description: JSON.stringify(error),
+//             message: 'Replace Words Error',
+//             placement: 'topLeft',
+//         });
+//     }
+// }

@@ -6,18 +6,13 @@ import { listfinetunesToOpenai } from '@/services/openai'
 import TabList from '@/components/bpurecomponents/tabList';
 import { getProjectSlidelistList, newSlidelist, updateSlidelistDetail, updateActiveSlidelist, getTargetSlidelist, deleteSlidelist } from '@/database/prompter/slidelist'
 import { getProjectTuningList } from '@/database/prompter/tuning'
-const defaultOption = [{ value: 'text-davinci-003', label: 'text-davinci-003' },
-{ value: 'text-curie-001', label: 'text-curie-001' },
-{ value: 'text-babbage-001', label: 'text-babbage-001' },
-{ value: 'text-ada-001', label: 'text-ada-001' },
-{ value: 'text-davinci-002', label: 'text-davinci-002' },
-{ value: 'text-davinci-001', label: 'text-davinci-001' },
-{ value: 'davinci-instruct-beta', label: 'davinci-instruct-beta' },
-{ value: 'davinci', label: 'davinci' },
-{ value: 'curie-instruct-beta', label: 'curie-instruct-beta' },
-{ value: 'curie', label: 'curie' },
-{ value: 'babbage', label: 'babbage' },
-{ value: 'ada', label: 'ada' }]
+const defaultOption = [
+  { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
+  { value: 'gpt-3.5-turbo-16k', label: 'gpt-3.5-turbo-16k' },
+  { value: 'gpt-3.5-turbo-16k-0613', label: 'gpt-3.5-turbo-16k-0613' },
+  { value: 'gpt-3.5-turbo-0613', label: 'gpt-3.5-turbo-0613' },
+  { value: 'gpt-3.5-turbo-0301', label: 'gpt-3.5-turbo-0301' },
+]
 
 export default function IndexPage({ projectid }: any) {
   const [form] = Form.useForm();
@@ -42,7 +37,7 @@ export default function IndexPage({ projectid }: any) {
     updateFromConfig()
     getModelOptions()
   }, [projectid])
-  
+
   const updateFromConfig = () => {
     getProjectSlidelistList(projectid).then(res => {
       if (res.all.length == 0) {
@@ -134,14 +129,6 @@ export default function IndexPage({ projectid }: any) {
   }
 
   const getModelOptions = () => {
-    listfinetunesToOpenai().then( async (res:any) => {
-      if (res) {
-        const usefuleModel =  res.data.data.filter((item:any)=>item.fine_tuned_model).sort((a, b) =>   b.created_at - a.created_at).map((item:any)=>({value:item.fine_tuned_model,label:item.fine_tuned_model}))
-        const result = await getProjectTuningList(projectid)
-        const currentModel =   result.all.filter((item:any)=>item.fine_tuned_model).sort((a, b) =>   b.creatData - a.creatData).map((item:any)=>({value:item.fine_tuned_model,label:item.fine_tuned_model}))
-        setOptionsModel( [...currentModel,...defaultOption,...usefuleModel] )
-      }
-    })
   }
 
   fakeHooks.updateModelOptions = getModelOptions
@@ -259,43 +246,7 @@ export default function IndexPage({ projectid }: any) {
             </Col>
           </Row>
         </div>
-        <div className={styles.rowLine}>
-          <Row>
-            <Tooltip
-              color="volcano"
-              title="Up to 4 sequences where the API will stop generating further tokens. The returned text will not contain the stop sequence."
-            >
-              <Col className={styles.title}>Stop sequences (up to 4 sequences)</Col>
-            </Tooltip>
-          </Row>
-          <Row
-            onMouseDown={(e) => e.stopPropagation()}
-            align="middle"
-          >
-            <Form.Item className={styles.formItemStyle} name="stop" >
-              <Select
-                mode="tags"
-                style={{ width: '100%', }}
-                tokenSeparators={[',']}
-                options={[
-                  {
-                    value: '.',
-                    label: '.',
-                  },
-                  {
-                    value: '!',
-                    label: '!',
-                  },
-                  {
-                    value: '“',
-                    label: '”',
-                  },
-                ]}
-              />
-            </Form.Item>
 
-          </Row>
-        </div>
         <div className={styles.rowLine}>
           <Row>
             <Tooltip
@@ -409,95 +360,6 @@ export default function IndexPage({ projectid }: any) {
         <div className={styles.rowLine}>
           <Row>
             <Tooltip
-              color="volcano"
-              title="Generates best_of completions server-side and returns the 'best' (the one with the highest log probability per token). Results cannot be streamed."
-            >
-              <Col className={styles.title}>Best Of</Col>
-            </Tooltip>
-          </Row>
-          <Row
-            onMouseDown={(e) => e.stopPropagation()}
-            align="middle"
-            gutter={16}
-          >
-            <Col span={16}>
-              <Form.Item className={styles.formItemStyle} name="best_of">
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                />
-              </Form.Item >
-            </Col>
-            <Col span={4}>
-              <Form.Item className={styles.formItemStyle} name="best_of">
-                <InputNumber
-                  min={1}
-                  max={10}
-                  step={1}
-                  size="small"
-                />
-              </Form.Item >
-            </Col>
-          </Row>
-        </div>
-        <div className={styles.rowLine}>
-          <Row>
-            <Tooltip
-              color="volcano"
-              title="Include the log probabilities on the logprobs most likely tokens, as well the chosen tokens. For example, if logprobs is 5, the API will return a list of the 5 most likely tokens. The API will always return the logprob of the sampled token, so there may be up to logprobs+1 elements in the response."
-            >
-              <Col className={styles.title}>Logprobs</Col>
-            </Tooltip>
-          </Row>
-          <Row
-            onMouseDown={(e) => e.stopPropagation()}
-            align="middle"
-            gutter={16}
-          >
-            <Col span={16}>
-              <Form.Item className={styles.formItemStyle} name="logprobs">
-                <Slider
-                  min={0}
-                  max={5}
-                  step={1}
-                />
-              </Form.Item >
-            </Col>
-            <Col span={4}>
-              <Form.Item className={styles.formItemStyle} name="logprobs">
-                <InputNumber
-                  min={0}
-                  max={5}
-                  step={1}
-                  size="small"
-                />
-              </Form.Item >
-            </Col>
-          </Row>
-        </div>
-        <div className={styles.rowLine}>
-          <Row>
-            <Tooltip
-              color="pink"
-              title="The suffix that comes after a completion of inserted text."
-            >
-              <Col className={styles.title}>Inject start text</Col>
-            </Tooltip>
-          </Row>
-          <Row
-            onMouseDown={(e) => e.stopPropagation()}
-            align="middle"
-          >
-            <Form.Item className={styles.formItemStyle} name="suffix" >
-              <Input></Input>
-            </Form.Item>
-
-          </Row>
-        </div>
-        <div className={styles.rowLine}>
-          <Row>
-            <Tooltip
               color="pink"
               title="How many completions to generate for each prompt."
             >
@@ -507,12 +369,14 @@ export default function IndexPage({ projectid }: any) {
           <Row
             onMouseDown={(e) => e.stopPropagation()}
             align="middle"
+            gutter={16}
           >
             <Col span={16}>
               <Form.Item className={styles.formItemStyle} name="n">
                 <Slider
                   min={0}
                   max={10}
+                  step={1}
                 />
               </Form.Item >
             </Col>
@@ -521,7 +385,9 @@ export default function IndexPage({ projectid }: any) {
                 <InputNumber
                   min={0}
                   max={10}
+                  step={1}
                   size="small"
+                  style={{}}
                 />
               </Form.Item >
             </Col>

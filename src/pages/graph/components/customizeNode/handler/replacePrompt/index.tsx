@@ -10,8 +10,7 @@ import { getTargetConversationsWithFatherid } from '@/database/conversation'
 import { getTargetSlideListsWithFatherid } from '@/database/slideLists'
 import { getTargetLogitBiasWithFatherid } from '@/database/logitBias'
 import { activeProject } from '@/stores/project';
-import LogitBias from '@/components/bpurecomponents/logitBias';
-import SlideList from '@/components/bpurecomponents/slideList';
+
 
 export default ({ node }: any) => {
     const { prompt } = node.getData()
@@ -81,7 +80,7 @@ export default ({ node }: any) => {
         console.log(promptInfo.logitBiasArray,1111111)
         return (
             <div className={styles.logitsContainer}>
-                <LogitBias logitBiasArray={promptInfo.logitBiasArray}></LogitBias>
+                {/* <LogitBias logitBiasArray={promptInfo.logitBiasArray}></LogitBias> */}
             </div>
         );
     };
@@ -89,7 +88,7 @@ export default ({ node }: any) => {
     const SlideListHoverContent = () => {
         return (
             <div className={styles.slideContainer}>
-                <SlideList slideListsData={promptInfo.parameter}></SlideList>
+                {/* <SlideList slideListsData={promptInfo.parameter}></SlideList> */}
             </div>
         );
     };

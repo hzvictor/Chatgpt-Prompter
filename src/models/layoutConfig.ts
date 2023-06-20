@@ -6,6 +6,7 @@ export default {
         isResizable: false,
         showParameter: true,
         showTuning: true,
+        // showPrompt: true,
         showTest: true,
         showChat: true,
         layoutGrid: [],

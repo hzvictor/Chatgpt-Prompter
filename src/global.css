@@ -6,10 +6,11 @@
     background:rgba(0,170,144, .5); 
     color:#555;
 } */
-body{
+body {
     margin: 0 !important;
 }
-.ant-layout{
+
+.ant-layout {
     background-color: rgba(169, 180, 202);
 }
 
@@ -33,10 +34,19 @@ body{
     height: 0;
 }
 
-.componentContainer{
+.componentContainer {
     background-color: white;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     border-radius: 10px;
     height: 100%;
     overflow: hidden;
+}
+
+.editable-cell-value-wrap {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    /* 指定显示的行数 */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

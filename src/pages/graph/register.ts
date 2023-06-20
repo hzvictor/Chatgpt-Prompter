@@ -12,6 +12,7 @@ import ClearHistory from './components/customizeNode/handler/clearHistory';
 import ReplaceString from './components/customizeNode/handler/replaceString';
 import ReplacePrompt from './components/customizeNode/handler/replacePrompt';
 import ReplaceModify from './components/customizeNode/handler/replaceModify';
+import ReplaceParameter from './components/customizeNode/handler/replaceParameter';
 const ports = {
     groups: {
         top: {
@@ -106,6 +107,14 @@ export default (Graph: any) => {
         height: 55,
         effect: ["data"],
         component: ReplaceModify,
+        ports: { ...ports },
+    });
+    register({
+        shape: "replace-parameter-node",
+        width: 160,
+        height: 55,
+        effect: ["data"],
+        component: ReplaceParameter,
         ports: { ...ports },
     });
     register({

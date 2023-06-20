@@ -87,6 +87,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                 ]}
             >
                 <TextArea
+                 autoSize={true}
                     onMouseDown={(e) => e.stopPropagation()}
                     ref={inputRef}
                     onPressEnter={save}

@@ -43,9 +43,6 @@ export default ({
     });
   };
 
-
-
-
   const confirmEditWrap = async (item: any) => {
     try {
       history.push(`/editor/${item.type}/${item.model}/${item.nanoid}`);

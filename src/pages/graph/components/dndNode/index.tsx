@@ -11,7 +11,7 @@ const commonAttrs = {
     },
 };
 
-export default ({graph}:any) => {
+export default ({ graph }: any) => {
     const dndContainerRef: any = useRef(null);
 
 
@@ -41,7 +41,7 @@ export default ({graph}:any) => {
                 title: 'Replace',
                 name: 'replace',
                 collapsable: false,
-                graphHeight: 239,
+                graphHeight: 160,
             },
             {
                 title: 'History',
@@ -60,8 +60,7 @@ export default ({graph}:any) => {
 
 
     useEffect(() => {
-        console.log(graph,111111111)
-        if( !graph){
+        if (!graph) {
             return
         }
 
@@ -156,10 +155,10 @@ export default ({graph}:any) => {
             }
         });
 
-        const r99 = graph.createNode({
-            shape: 'function-send-message',
-            label: 'Message Func'
-        });
+        // const r99 = graph.createNode({
+        //     shape: 'function-send-message',
+        //     label: 'Message Func'
+        // });
 
         const r19 = graph.createNode({
             shape: 'stop-genurate-node',
@@ -167,7 +166,7 @@ export default ({graph}:any) => {
             //     string: 'hello'
             // }
         });
-        stencil.load([r13, r12, r99, r19], 'send');
+        stencil.load([r13, r12, r19], 'send');
 
         const r15 = graph.createNode({
             shape: 'replace-string-node',
@@ -176,53 +175,54 @@ export default ({graph}:any) => {
                 replace: 'world'
             }
         });
-        const r16 = graph.createNode({
-            shape: 'replace-prompt-node',
-            data: {
 
-            }
-        });
         const r17 = graph.createNode({
             shape: 'replace-modify-node',
             data: {
-                modify: {
-                    prefix: "",
-                    suffix: ""
-                }
+                prefix: "",
+                suffix: ""
             }
         });
 
-        const r11 = graph.createNode({
-            shape: 'function-replace-message',
-            label: 'Message Func'
-        });
+        // const r11 = graph.createNode({
+        //     shape: 'function-replace-message',
+        //     label: 'Message Func'
+        // });
 
-        const r20 = graph.createNode({
-            shape: 'function-replace-modify',
-            label: 'Modify Func'
-        });
+        // const r16 = graph.createNode({
+        //     shape: 'replace-prompt-node',
+        //     data: {
+
+        //     }
+        // });
+
+        // const r20 = graph.createNode({
+        //     shape: 'function-replace-modify',
+        //     label: 'Modify Func'
+        // });
         const r21 = graph.createNode({
-            shape: 'function-replace-prompt',
-            label: 'Prompt Func'
+            shape: 'replace-parameter-node',
+            label: 'Replace Parameter',
+            data: {}
         });
 
-        stencil.load([r15, r16, r17, r11, r20, r21], 'replace');
+        stencil.load([r15,  r17, r21], 'replace');
 
 
         const r33 = graph.createNode({
             shape: 'clear-history-node',
         });
-        const r36 = graph.createNode({
-            shape: 'reset-history-node',
-        });
+        // const r36 = graph.createNode({
+        //     shape: 'reset-history-node',
+        // });
         const r35 = graph.createNode({
             shape: 'replace-history-strategy',
             label: 'Change History Func'
         });
 
-        stencil.load([r36,r33, r35], 'history');
+        stencil.load([ r33, r35], 'history');
         dndContainerRef.current.appendChild(stencil.container);
-    }, [dndContainerRef,graph]);
+    }, [dndContainerRef, graph]);
 
     return (
         <div className="dnd-wrap" ref={dndContainerRef}>

@@ -14,11 +14,12 @@ import Test from '@/components/test';
 import FixHeader from './components/fixHeader';
 import DndNode from './components/dndNode';
 import initgraph from './init';
-;
+
 import { MiniMap } from '@antv/x6-plugin-minimap';
 import registerGraph from './register';
 import { updataInfoToBot, updateShotCut } from '@/utils/graphUtils';
 import { fakeHooks } from '@/stores/fakehooks';
+import { graphState } from '@/stores/graph';
 const newGraph = registerGraph(Graph);
 
 export default function IndexPage({ match }: any) {
@@ -29,6 +30,7 @@ export default function IndexPage({ match }: any) {
   const [openRight, setOpenRight] = useState(true);
   const [openCode, setOpenCode] = useState(false);
   const [graph, setGraph] = useState()
+  const [codeConfig, setCodeConfig] = useState()
   const projectid = match.params.projectid ? match.params.projectid : '123'
   const graphType = match.params.type ? match.params.type : '123'
 
@@ -391,7 +393,13 @@ export default function IndexPage({ match }: any) {
     setOpenLeft(false);
   };
 
-
+  const showCodeDrawer = (id: string, type: string) => {
+    setCodeConfig({
+      id, type
+    })
+    setOpenCode(true);
+  };
+  graphState.showDefaultCode = showCodeDrawer
 
   const onCloseCode = () => {
     setOpenCode(false);
@@ -466,7 +474,6 @@ export default function IndexPage({ match }: any) {
       </Drawer>
       {!openRight && (
         <Button
-          // onClick={showDefaultCode}
           onClick={showDefaultDrawerRight}
           style={{ position: 'fixed', right: '10px', top: '10px' }}
           type="primary"
@@ -486,7 +493,7 @@ export default function IndexPage({ match }: any) {
         open={openCode}
         size="large"
       >
-        <CodeEditor onCloseCode={onCloseCode}></CodeEditor>
+        <CodeEditor codeConfig={codeConfig} onCloseCode={onCloseCode}></CodeEditor>
         {openCode && (
           <Button
             type="primary"

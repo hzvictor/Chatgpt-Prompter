@@ -12,12 +12,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { makeNodeId } from '@/utils/withNodeId';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import type { InputRef } from 'antd';
+import { InputRef, Space } from 'antd';
 import { Button, Form, Input, Popconfirm, Table, message, Row, Col, Modal } from 'antd';
 import type { FormInstance } from 'antd/es/form';
 import { getProjectTuningList, newTuning, updateTuningDetail, updateActiveTuning, getTargetTuning, deleteTuning } from '@/database/prompter/tuning'
 import { retrieveFTToOpenai, cancelfinetuneToOpenai } from '@/services/openai'
 import TrainResult from './components/trainResult'
+import ImportContent from './components/import'
 import TabList from '@/components/bpurecomponents/tabList';
 import Train from './components/train'
 import styles from './index.less';
@@ -89,6 +90,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                 ]}
             >
                 <TextArea
+                    autoSize={true}
                     onMouseDown={(e) => e.stopPropagation()}
                     ref={inputRef}
                     onPressEnter={save}
@@ -102,7 +104,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                 style={{ paddingRight: 24, minHeight: '30px' }}
                 onClick={toggleEdit}
             >
-                {children}
+            {children}
             </div>
         );
     }
@@ -190,12 +192,14 @@ const App = ({ projectid }: any) => {
     const [loading, setLoading] = useState(false);
     const [loadingStop, setLoadingStop] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalImportOpen, setIsModalImportOpen] = useState(false);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [trainResult, setTrainResult] = useState({})
     const [updateTimer, setUpdateTimert] = useState({})
     const [tableInfo, setTableInfo] = useState({
         nanoid: '',
         name: 'Tuning',
+        tasks:[],
         projectid: projectid,
         fine_tuned_model: '',
         trainConfig: {},
@@ -221,6 +225,7 @@ const App = ({ projectid }: any) => {
                         projectid: projectid,
                         fine_tuned_model: '',
                         trainConfig: {},
+                        tasks:[],
                         isTrain: false,
                         isActive: true,
                     })
@@ -230,6 +235,7 @@ const App = ({ projectid }: any) => {
                         projectid: projectid,
                         fine_tuned_model: '',
                         trainConfig: {},
+                        tasks:[],
                         isTrain: false,
                         isActive: true,
                     }])
@@ -417,6 +423,19 @@ const App = ({ projectid }: any) => {
         setIsResultModalOpen(false);
     };
 
+
+    const handleImportOk = () => {
+        setIsModalImportOpen(false);
+    };
+
+    const showImportModal = () => {
+        setIsModalImportOpen(true);
+    };
+
+    const handleImportCancel = () => {
+        setIsModalImportOpen(false);
+    };
+
     const handleResultCancel = () => {
         setIsResultModalOpen(false);
         clearInterval(updateTimer)
@@ -551,6 +570,23 @@ const App = ({ projectid }: any) => {
         }
     }
 
+    const addNewDataItem = (item:any) => {
+
+        getProjectTuningList(projectid).then(res => {
+            const dateSource = res?.active?.list
+            console.log(dateSource,dateSource.concat(item))
+            setDataSource(dateSource.concat(item))
+        })
+
+    }
+
+    const updataTaskDetail = (newTasks:any) => {
+        const newTableInfo = JSON.parse(JSON.stringify(tableInfo))
+        newTableInfo.tasks = newTasks
+        // console.log(newTasks,tableInfo.tasks)
+        setTableInfo(newTableInfo)
+    }
+
     return (
 
         <div className={`componentContainer  ${styles.container}`}>
@@ -570,14 +606,24 @@ const App = ({ projectid }: any) => {
             </Row>
             <Row justify="space-between">
                 <Col >
-                    <Button
-                        onClick={handleAdd}
-                        type="primary"
-                        disabled={tableInfo.isTrain}
-                    // style={{ marginBottom: 16 }}
-                    >
-                        Add a row
-                    </Button>
+                    <Space>
+                        <Button
+                            onClick={handleAdd}
+                            type="primary"
+                            disabled={tableInfo.isTrain}
+                        // style={{ marginBottom: 16 }}
+                        >
+                            Add a row
+                        </Button>
+                        <Button
+                            onClick={showImportModal}
+                            type="primary"
+                            disabled={tableInfo.isTrain}
+                        // style={{ marginBottom: 16 }}
+                        >
+                            Import Data
+                        </Button>
+                    </Space>
                 </Col>
                 <Col>
                     <Row gutter={16}>
@@ -630,7 +676,7 @@ const App = ({ projectid }: any) => {
                             },
                         } : undefined}
                         rowKey="key"
-                        pagination={false}
+                        // pagination={false}
                         columns={tableInfo.isTrain ? disableColumns as ColumnTypes : columns as ColumnTypes}
                         rowClassName={() => 'editable-row'}
                         dataSource={dataSource}
@@ -642,6 +688,9 @@ const App = ({ projectid }: any) => {
             </Modal>
             <Modal width={1000} destroyOnClose={true} title="Training Result" open={isResultModalOpen} onOk={handleResultOk} onCancel={handleResultCancel}>
                 <TrainResult loading={loading} result={trainResult} ></TrainResult>
+            </Modal>
+            <Modal  width={800} destroyOnClose={true} title="Import Data" footer={null} open={isModalImportOpen} onOk={handleImportOk} onCancel={handleImportCancel}>
+                <ImportContent addNewDataItem={addNewDataItem} updataTaskDetail={updataTaskDetail}  tableInfo={tableInfo} ></ImportContent>
             </Modal>
         </div>
 

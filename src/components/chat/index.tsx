@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 import { makeNodeId } from '@/utils/withNodeId';
 import { handelhistoryFunction } from '@/utils/handelFunction';
 import { fakeHooks } from '@/stores/fakehooks';
-
+import { piplineAllFunction, filterUsefulInfo } from '@/utils/graphUtils';
 const initialMessages = [
     // {
     //     type: 'text',
@@ -56,15 +56,17 @@ export default function ({ projectid }: any) {
         nanoid: '',
     })
 
-    const [quickReplies, setQuickReplies ] = useState([])
+    const [quickReplies, setQuickReplies] = useState([])
 
     const [history, setHistory] = useState([])
 
     fakeHooks.setQuickReplies = setQuickReplies as any
 
-    const hzAppendMsg = (content: any, realContent: any, role = 'user', position = 'left', history = [], type = 'text', modify = {}) => {
+    const hzAppendMsg = (data: any) => {
+        const { content, realContent, role = 'user', position = 'left', history = [], type = 'text', modify = {} } = data
+
         const _id = makeNodeId();
-        appendMsg({
+        const message = {
             _id: _id,
             type: type,
             role: role,
@@ -74,8 +76,11 @@ export default function ({ projectid }: any) {
             createdAt: dayjs().valueOf(),
             history: history,
             modify: modify
-        });
-        
+        }
+        appendMsg(message as any);
+
+        return message
+
     }
 
 
@@ -121,6 +126,39 @@ export default function ({ projectid }: any) {
         updateChatbotDetail(chatbotInfo.nanoid, { history: history })
     }, [history])
 
+    async function getRealData(message: any) {
+
+        const chatbotInfo = await getProjectChatbot(projectid)
+        const slidelist = await getProjectSlidelistList(projectid)
+
+        const messageindex = {
+            all: 0,
+            assistant: 0,
+            user: 0,
+        }
+        for (let index = 0; index < messages.length; index++) {
+            const element = messages[index];
+            messageindex.all = messageindex.all + 1
+            if (element.role == 'user') {
+                messageindex.user = messageindex.user + 1
+            } else {
+                messageindex.assistant = messageindex.assistant + 1
+            }
+        }
+
+        return {
+            input: message,
+            index: messageindex,
+            messageHistory: messages,
+            prompt: {
+                parameter: slidelist.active ? slidelist.active.config : {},
+                history: history,
+                modify: chatbotInfo.modify ? chatbotInfo.modify : { prefix: '', suffix: '' },
+                messages: []
+            }
+        }
+    }
+
 
     async function updataHistory(messages: any) {
         const chatbotInfo = await getProjectChatbot(projectid)
@@ -145,16 +183,16 @@ export default function ({ projectid }: any) {
 
         if (messages.length > 0) {
             let isPushHistory = true
-            const lastMessage = messages[messages.length - 1].type == 'typing' ?  messages[messages.length - 2] : messages[messages.length - 1]
+            const lastMessage = messages[messages.length - 1].type == 'typing' ? messages[messages.length - 2] : messages[messages.length - 1]
             const InputData = {
                 input: lastMessage,
                 index: messageindex,
                 messageHistory: messages,
-                prompt:{
-                    parameter:slidelist.active?slidelist.active.config:{},
-                    history:history,
-                    modify: chatbotInfo.modify ? chatbotInfo.modify : { prefix:'',suffix:''},
-                    messages:[]
+                prompt: {
+                    parameter: slidelist.active ? slidelist.active.config : {},
+                    history: history,
+                    modify: chatbotInfo.modify ? chatbotInfo.modify : { prefix: '', suffix: '' },
+                    messages: []
                 }
             }
 
@@ -171,6 +209,66 @@ export default function ({ projectid }: any) {
     }
 
 
+    const pipelineResult = async (result: any) => {
+
+        if (result.clearHistory) {
+            await setHistory([])
+        }
+
+        if (result.historyFunction) {
+            await updateChatbotDetail(chatbotInfo.nanoid, { historyFunction: result.historyFunction.content })
+        }
+
+        if (result.modify) {
+            await updateChatbotDetail(chatbotInfo.nanoid, { modify: result.modify })
+        }
+        
+        if (result.parameter) {
+            await updateChatbotDetail(chatbotInfo.nanoid, { parameter: result.parameter })
+        }
+
+    }
+
+    const getFunctionTreeResult = async (tree: any, message: any) => {
+        const chatbotInfo = await getProjectChatbot(projectid)
+
+        const functionMap = chatbotInfo.functionMap
+
+        const treeFuntionResuList: any = []
+        const inputData = await getRealData(message)
+
+        await traverseJSON(tree, inputData)
+        const usefulInfo = filterUsefulInfo(treeFuntionResuList, inputData)
+
+        return usefulInfo
+
+        async function traverseJSON(obj: any, inputdata: any) {
+            for (let key in obj) {
+                const item = functionMap[key]
+                const treeFuntionResult = await piplineAllFunction(item, inputdata)
+                let newInputdata: any = {}
+                if (treeFuntionResult.sendUsermessage) {
+                    newInputdata = {
+                        ...inputdata,
+                        sendUsermessage: inputdata.sendUsermessage ? inputdata.sendUsermessage.concat(treeFuntionResult.sendUsermessage) : treeFuntionResult.sendUsermessage,
+                    }
+                }
+                else {
+                    newInputdata = {
+                        ...inputdata,
+                        ...treeFuntionResult,
+                    }
+                }
+
+                if (Object.keys(obj[key]).length > 0 && treeFuntionResult.isContinue) {
+                    await traverseJSON(obj[key], newInputdata); // 如果当前键值还是一个对象，则递归遍历
+                } else {
+                    treeFuntionResuList.push(newInputdata)
+                }
+            }
+        }
+    }
+
     // 发送回调
     async function handleSend(type: any, val: any) {
         if (type === 'text' && val.trim()) {
@@ -184,49 +282,99 @@ export default function ({ projectid }: any) {
                 }
             }
 
-            hzAppendMsg({ text: val }, { text: newval }, 'user', 'right')
 
-            setTyping(true);
+            const message = hzAppendMsg({
+                content: { text: val },
+                realContent: { text: newval },
+                role: 'user',
+                position: 'right'
+            })
 
-            botAnswer(type, val)
+            console.log(chatbotInfo,1111111111)
+
+            if (chatbotInfo.userFunctionTree) {
+                const result = await getFunctionTreeResult(chatbotInfo.userFunctionTree, message)
+                await pipelineResult(result)
+                console.log(result,1111111)
+                if (result.sendUsermessage) {
+                    setTyping(true);
+                    result.sendUsermessage.forEach((item: any) => {
+                        setTimeout(() => {
+                            hzAppendMsg({
+                                content: item.content,
+                                realContent: item.content,
+                                role: 'assistant',
+                                position: 'left',
+                                type: item.type
+                            })
+                            setTyping(false);
+                        }, 800);
+                    })
+                }
+
+                if (!result.stopGenurate) {
+                    setTyping(true);
+                    botAnswer(type, result.input ? result.input : val);
+                }
+            }else{
+                setTyping(true);
+                botAnswer(type, val);
+            }
         }
     }
 
 
 
+    fakeHooks.updateChatbotParameter = async () => {
+        const slidelist = await getProjectSlidelistList(projectid)
+        await updateChatbotDetail(chatbotInfo.nanoid, { parameter: slidelist.active})
+    }
+
     const botAnswer = async (type: any, val: string) => {
         let newval = val
-        const slidelist = await getProjectSlidelistList(projectid)
         const chatbotInfo = await getProjectChatbot(projectid)
-        if (!slidelist.active) {
-            message.info("parameter not exist")
-            return
+        let parameter =  chatbotInfo.parameter
+
+        if(!parameter){
+            const slidelist = await getProjectSlidelistList(projectid)
+            if (!slidelist.active) {
+                message.info("parameter not exist")
+                return
+            }
+            parameter = slidelist.active.config
         }
+
+        
         if (chatbotInfo.modify) {
             if (type == 'text') {
                 newval = chatbotInfo.modify.prefix + newval + chatbotInfo.modify.suffix
             }
         }
 
-        if(chatbotInfo.history){
-            const historyListMessage = history.map((item:any)=> {
-                if(item.content.text){
+        if (chatbotInfo.history) {
+            const historyListMessage = history.map((item: any) => {
+                if (item.content.text) {
                     return item.content.text
-                }else{
+                } else {
                     return ''
                 }
             })
-            const historyJoin = historyListMessage.join(`/n/n`) 
-            newval = historyJoin + '\/n\/n' + newval 
+            const historyJoin = historyListMessage.join(`/n/n`)
+            newval = historyJoin + '\/n\/n' + newval
         }
 
 
         completionOpenai({
-            ...slidelist.active.config,
+            ...parameter,
             prompt: newval,
         }).then(res => {
             console.log(res)
-            hzAppendMsg({ text: res?.data?.text.trim() }, { text: res?.data?.text.trim() }, 'assistant', 'left')
+            hzAppendMsg({
+                content: { text: res?.data?.text.trim() },
+                realContent: { text: res?.data?.text.trim() },
+                role: 'assistant',
+                position: 'left'
+            })
         })
     }
 

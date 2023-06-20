@@ -11,11 +11,14 @@ import TabList from '@/components/bpurecomponents/tabList';
 import { CSS } from '@dnd-kit/utilities';
 import { makeNodeId } from '@/utils/withNodeId';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { InputRef, message } from 'antd';
-import { Button, Form, Input, Popconfirm, Table, Switch, Row, Col, Tooltip } from 'antd';
+import { InputRef, Space, message } from 'antd';
+import { Button, Form, Input, Popconfirm, Table, Select, Row, Col, Tooltip } from 'antd';
 import type { FormInstance } from 'antd/es/form';
-import { getProjectTestList, newTest, updateTestDetail, updateActiveTest, getTargetTest, deleteTest } from '@/database/prompter/test'
-import { fileUploadToOpenai } from '@/services/openai'
+import { getProjectPromptList, newPrompt, updatePromptDetail, updateActivePrompt, getTargetPrompt, deletePrompt } from '@/database/prompter/prompt'
+
+import { chatToOpenaiServer } from '@/services/openai'
+import { SearchOutlined } from '@ant-design/icons';
+
 import styles from './index.less';
 import dayjs from 'dayjs';
 const { TextArea } = Input;
@@ -87,7 +90,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                 ]}
             >
                 <TextArea
-                 autoSize={true}
+                    autoSize={true}
                     onMouseDown={(e) => e.stopPropagation()}
                     ref={inputRef}
                     onPressEnter={save}
@@ -123,6 +126,37 @@ interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
 
 //     );
 // };
+
+
+const initDataSourece = [
+    {
+        key: makeNodeId(),
+        role: 'system',
+        name: '',
+        state: '',
+        function_call: '',
+        remake: '',
+        message: ``,
+    },
+    {
+        key: makeNodeId(),
+        role: 'user',
+        name: '',
+        function_call: '',
+        state: '',
+        remake: '',
+        message: ``,
+    },
+    {
+        key: makeNodeId(),
+        role: 'assistant',
+        name: '',
+        function_call: '',
+        state: '',
+        remake: '',
+        message: ``,
+    },
+]
 
 const TableRow = ({ children, ...props }: RowProps) => {
 
@@ -185,15 +219,16 @@ const TableRow = ({ children, ...props }: RowProps) => {
 
 const App = ({ projectid }: any) => {
 
-    const [loading, setLoading] = useState(false);
     const [tableInfo, setTableInfo] = useState({
         nanoid: '',
-        name: 'Test',
+        name: 'Prompt',
         projectid: projectid,
         isSynchronize: false,
         isActive: true,
     })
-    const [dataSource, setDataSource] = useState([])
+    const [dataSource, setDataSource] = useState([
+
+    ])
     const [allDataSource, setAllDataSource] = useState([])
 
     useEffect(() => {
@@ -202,12 +237,12 @@ const App = ({ projectid }: any) => {
 
 
     const updateTableList = () => {
-        getProjectTestList(projectid).then(res => {
+        getProjectPromptList(projectid).then(res => {
             if (res.all.length == 0) {
-                newTest('Test', projectid,).then((id: any) => {
+                newPrompt('Prompt', projectid,).then((id: any) => {
                     setTableInfo({
                         nanoid: id,
-                        name: 'Test',
+                        name: 'Prompt',
                         projectid: projectid,
                         isSynchronize: false, // 0 1 2
                         isActive: true
@@ -216,7 +251,7 @@ const App = ({ projectid }: any) => {
                     setAllDataSource([
                         {
                             nanoid: id,
-                            name: 'Test',
+                            name: 'Prompt',
                             projectid: projectid,
                             isSynchronize: false,
                             isActive: true
@@ -224,6 +259,7 @@ const App = ({ projectid }: any) => {
                     ])
                 })
 
+                setDataSource(initDataSourece)
 
             } else {
                 setAllDataSource(res.all)
@@ -243,7 +279,7 @@ const App = ({ projectid }: any) => {
 
         newTableInfo.updateDate = dayjs().valueOf()
         if (tableInfo.nanoid) {
-            updateTestDetail(tableInfo.nanoid, { ...newTableInfo, list: dataSource })
+            updatePromptDetail(tableInfo.nanoid, { ...newTableInfo, list: dataSource })
         }
 
 
@@ -260,9 +296,45 @@ const App = ({ projectid }: any) => {
                 width: '3%',
             },
             {
+                title: 'Role',
+                dataIndex: 'role',
+                width: '10%',
+                render: (_, record: { key: React.Key }) => {
+                    return <Space size="small">
+                        <Select
+                            value={_}
+                            bordered={false}
+                            style={{ width: 110 }}
+                            onChange={(value) => { changeValue(value, record) }}
+                            options={[{ value: 'user', label: 'User' },
+                            { value: 'assistant', label: 'Assistant' },
+                            { value: 'system', label: 'System' }]}
+                        />
+
+                    </Space>
+                }
+            },
+            {
                 title: 'Message',
                 dataIndex: 'message',
-                width: '96%',
+                width: '80%',
+                editable: true,
+                render: (_, record: any) => {
+
+
+                    return <Space>{record.role == 'assistant' && _ == '' && <Button loading={record.state == 'loading'} onClick={(event) => { genrateContent(event, record) }} type="primary"  > {record.state} Generate </Button>}{_}</Space>
+                }
+            },
+            {
+                title: 'Name',
+                dataIndex: 'name',
+                width: '10%',
+                editable: true,
+            },
+            {
+                title: 'Remark',
+                dataIndex: 'remark',
+                width: '10%',
                 editable: true,
             },
             {
@@ -277,19 +349,68 @@ const App = ({ projectid }: any) => {
             },
         ];
 
+    const genrateContent = (event: any, recode: any) => {
+        event.stopPropagation();
+        const targeIndex = dataSource.findIndex((item: any) => item.key == recode.key)
+        const messages = dataSource.map((item: any) => { return { role: item.role, content: item.message } })
+        const newDataSource = JSON.parse(JSON.stringify(dataSource))
+        newDataSource[targeIndex].state = 'loading'
+        setDataSource(newDataSource)
+
+        chatToOpenaiServer({
+            "messages": messages
+        }).then((res) => {
+
+            console.log(res, 11111)
+            if (res) {
+                const newDataSource = JSON.parse(JSON.stringify(dataSource))
+                newDataSource[targeIndex].message = res.data.message.content
+                newDataSource[targeIndex].state = 'done'
+                setDataSource(newDataSource)
+            }
+            console.log(newDataSource, 222222222)
+        })
+        // console.log(record, 1111111)
+    }
 
     const handleDelete = (key: React.Key) => {
         const newData = dataSource.filter((item) => item.key !== key);
         setDataSource(newData);
     };
 
+    const changeValue = (value: any, recode: any) => {
+        const targeIndex = dataSource.findIndex((item: any) => item.key == recode.key)
+
+        console.log(targeIndex, 11111)
+
+        const newDataSource = JSON.parse(JSON.stringify(dataSource))
+        newDataSource[targeIndex].role = value
+        setDataSource(newDataSource)
+    }
+
     const handleAdd = () => {
+        let role = dataSource[dataSource.length - 1].role
+        if (role == 'user') {
+            role = 'assistant'
+        } else if (role == 'assistant') {
+            role = 'user'
+        } else {
+            role = 'user'
+        }
+
+
+
         const newData = {
             key: makeNodeId(),
+            role: role,
+            name: '',
+            function_call: '',
+            state: '',
+            remake: '',
             message: ``,
         };
-        setDataSource([...dataSource, newData]);
 
+        setDataSource([...dataSource, newData]);
     };
 
     const handleSave = (row) => {
@@ -331,19 +452,15 @@ const App = ({ projectid }: any) => {
 
 
 
-
-
-
-
     const addNewTab = async () => {
-        const id = await newTest(`Test ${allDataSource.length}`, projectid)
-        await updateActiveTest(projectid, id)
+        const id = await newPrompt(`Prompt ${allDataSource.length}`, projectid)
+        await updateActivePrompt(projectid, id)
         await updateTableList()
         return id
     }
     const changeTab = async (newActiveKey: string) => {
-        await updateActiveTest(projectid, newActiveKey)
-        const tuning = await getTargetTest(newActiveKey)
+        await updateActivePrompt(projectid, newActiveKey)
+        const tuning = await getTargetPrompt(newActiveKey)
 
         setTableInfo(tuning)
         setDataSource(tuning.list)
@@ -352,7 +469,7 @@ const App = ({ projectid }: any) => {
     const removeTab = async (targetKey: string, newActiveKey: string) => {
         if (targetKey != newActiveKey) {
             await changeTab(newActiveKey)
-            await deleteTest(targetKey)
+            await deletePrompt(targetKey)
             await updateTableList()
         } else {
             message.info('cannot delete the last')
@@ -360,7 +477,7 @@ const App = ({ projectid }: any) => {
     }
 
     const changeTabName = async (newName: string) => {
-        await updateTestDetail(tableInfo.nanoid, { name: newName })
+        await updatePromptDetail(tableInfo.nanoid, { name: newName })
     }
 
     const saveTab = () => {
@@ -368,12 +485,6 @@ const App = ({ projectid }: any) => {
     }
 
 
-    const changeSynchronize = (val:any) =>{
-        const newTableInfo = JSON.parse(JSON.stringify(tableInfo))
-
-        newTableInfo.isSynchronize = val
-        setTableInfo(newTableInfo)
-    }
 
     return (
         <div className={`componentContainer  ${styles.container}`}>
@@ -391,35 +502,15 @@ const App = ({ projectid }: any) => {
                     ></TabList>
                 </Col>
             </Row>
-            <Row style={{ marginTop: "-10px", marginBottom: "5px", padding: "0 10px" }} align="middle" justify="space-between">
+            <Row style={{ marginBottom: "5px", padding: "0 10px" }} >
                 <Col >
                     <Button
                         onClick={handleAdd}
                         disabled={tableInfo.isUpload}
                         type="primary"
-                        shape="circle"
-                        icon={<PlusOutlined />}
                     >
+                        ADD
                     </Button>
-                </Col>
-                <Col>
-                    <Row >
-                        <Tooltip
-                            title="In synchronous mode, it will be tested according to the input order,
-Asynchronous mode will send both"
-                            color="lime"
-                        >
-                            <div className={styles.model}>
-                                {' '}
-                                <span className={styles.modelName}>Synchronize</span>{' '}
-                                <Switch
-                                    checked={tableInfo.isSynchronize}
-                                    onChange={(val)=>{changeSynchronize(val)}}
-                                    size="small"
-                                ></Switch>
-                            </div>
-                        </Tooltip>
-                    </Row>
                 </Col>
             </Row>
 
