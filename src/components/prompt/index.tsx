@@ -15,7 +15,7 @@ import { InputRef, Space, message } from 'antd';
 import { Button, Form, Input, Popconfirm, Table, Select, Row, Col, Tooltip } from 'antd';
 import type { FormInstance } from 'antd/es/form';
 import { getProjectPromptList, newPrompt, updatePromptDetail, updateActivePrompt, getTargetPrompt, deletePrompt } from '@/database/prompter/prompt'
-
+import { getProjectSlidelistList } from '@/database/prompter/slidelist'
 import { chatToOpenaiServer } from '@/services/openai'
 import { SearchOutlined } from '@ant-design/icons';
 
@@ -349,8 +349,16 @@ const App = ({ projectid }: any) => {
             },
         ];
 
-    const genrateContent = (event: any, recode: any) => {
+    const genrateContent = async (event: any, recode: any) => {
         event.stopPropagation();
+
+        const slidelist = await getProjectSlidelistList(projectid)
+        if (!slidelist.active) {
+            message.info("parameter not exist")
+            return
+        }
+        const parameter = slidelist.active.config
+
         const targeIndex = dataSource.findIndex((item: any) => item.key == recode.key)
         const messages = dataSource.map((item: any) => { return { role: item.role, content: item.message } })
         const newDataSource = JSON.parse(JSON.stringify(dataSource))
@@ -358,17 +366,15 @@ const App = ({ projectid }: any) => {
         setDataSource(newDataSource)
 
         chatToOpenaiServer({
-            "messages": messages
+            "messages": messages,
+            ...parameter
         }).then((res) => {
-
-            console.log(res, 11111)
             if (res) {
                 const newDataSource = JSON.parse(JSON.stringify(dataSource))
                 newDataSource[targeIndex].message = res.data.message.content
                 newDataSource[targeIndex].state = 'done'
                 setDataSource(newDataSource)
             }
-            console.log(newDataSource, 222222222)
         })
         // console.log(record, 1111111)
     }

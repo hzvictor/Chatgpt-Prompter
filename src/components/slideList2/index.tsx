@@ -1,11 +1,15 @@
 import styles from './index.less';
-import { Slider, Row, Col, Form, Tooltip, Select, message, InputNumber, Input } from 'antd';
+import { Slider, Row, Col, Form, Modal, Popconfirm, Tooltip, Select, Drawer, message, InputNumber, Input, Button, Space, Card } from 'antd';
 import { useEffect, useState } from 'react';
 import { fakeHooks } from '@/stores/fakehooks';
 import { listfinetunesToOpenai } from '@/services/openai'
 import TabList from '@/components/bpurecomponents/tabList';
 import { getProjectSlidelistList, newSlidelist, updateSlidelistDetail, updateActiveSlidelist, getTargetSlidelist, deleteSlidelist } from '@/database/prompter/slidelist'
 import { getProjectTuningList } from '@/database/prompter/tuning'
+
+import { EditOutlined, DeleteOutlined, MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+const { TextArea } = Input;
+const { Meta } = Card;
 const defaultOption = [
   { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
   { value: 'gpt-3.5-turbo-16k', label: 'gpt-3.5-turbo-16k' },
@@ -13,25 +17,39 @@ const defaultOption = [
   { value: 'gpt-3.5-turbo-0613', label: 'gpt-3.5-turbo-0613' },
   { value: 'gpt-3.5-turbo-0301', label: 'gpt-3.5-turbo-0301' },
 ]
+const deleteText = 'Are you sure to delete this project';
+const deleteDescription = 'cannot be restored after deletion.';
 
 export default function IndexPage({ projectid }: any) {
   const [form] = Form.useForm();
+  const [modelFrom] = Form.useForm();
   const [optionsModel, setOptionsModel] = useState(defaultOption);
+  const [open, setOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [functonsOption, setFunctionsOption ] = useState([
+    { value: 'gpt-3.5-turbo-0613', label: 'gpt-3.5-turbo-0613' },
+    { value: 'gpt-3.5-turbo-0301', label: 'gpt-3.5-turbo-0301' },
+  ])
   const [tableInfo, setTableInfo] = useState({
     nanoid: '',
     name: 'Parameter',
     isActive: true,
+    config: {}
   })
   const [dataSource, setDataSource] = useState({
     model: 'davinci',
     temperature: 1,
     max_tokens: 100,
     top_p: 1,
+    n: 1,
     presence_penalty: 0,
     frequency_penalty: 0,
-    best_of: 1,
+    functions: [],
+    function_call: '',
   })
   const [allDataSource, setAllDataSource] = useState([])
+  const [isUpdate, setIsUpdate] = useState(false)
+  const [editeIndex, setEditeIndex] = useState(0)
 
   useEffect(() => {
     updateFromConfig()
@@ -45,7 +63,8 @@ export default function IndexPage({ projectid }: any) {
           setTableInfo({
             nanoid: id,
             name: 'Parameter',
-            isActive: true
+            isActive: true,
+            // config:dataSource
           })
           setAllDataSource([
             {
@@ -54,8 +73,6 @@ export default function IndexPage({ projectid }: any) {
             }
           ])
         })
-
-
       } else {
         setAllDataSource(res.all)
         setTableInfo(res?.active)
@@ -71,14 +88,35 @@ export default function IndexPage({ projectid }: any) {
         temperature: 1,
         max_tokens: 100,
         top_p: 1,
+        n: 1,
         presence_penalty: 0,
         frequency_penalty: 0,
-        best_of: 1,
+        functions: [],
+        function_call: '',
       })
+
+      if (tableInfo.nanoid) {
+        updateSlidelistDetail(tableInfo.nanoid, {
+          config: {
+            model: optionsModel[0].value,
+            temperature: 1,
+            max_tokens: 100,
+            top_p: 1,
+            n: 1,
+            presence_penalty: 0,
+            frequency_penalty: 0,
+            functions: [],
+            function_call: '',
+          }
+        })
+      }
     } else {
       form.setFieldsValue({
         ...dataSource,
       })
+      if (tableInfo.nanoid) {
+        updateSlidelistDetail(tableInfo.nanoid, { config: dataSource })
+      }
     }
 
 
@@ -99,6 +137,7 @@ export default function IndexPage({ projectid }: any) {
     await updateFromConfig()
     return id
   }
+
   const changeTab = async (newActiveKey: string) => {
     await updateActiveSlidelist(projectid, newActiveKey)
     const tuning = await getTargetSlidelist(newActiveKey)
@@ -131,6 +170,60 @@ export default function IndexPage({ projectid }: any) {
   const getModelOptions = () => {
   }
 
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+
+  const confirmDelete = (selfIndex: number) => {
+    const newDataSource = JSON.parse(JSON.stringify(dataSource))
+    newDataSource.functions = newDataSource.functions.filter((item: any, index: number) => selfIndex != index)
+
+    setDataSource(newDataSource)
+  };
+
+  const showModal = () => {
+    setIsUpdate(false)
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  const onFinish = (values: any) => {
+    const newDataSource = JSON.parse(JSON.stringify(dataSource))
+    if(isUpdate){
+      newDataSource.functions[editeIndex] = values
+    }else{
+      newDataSource.functions = newDataSource.functions.concat([values])
+    }
+    
+    setDataSource(newDataSource)
+
+    modelFrom.resetFields()
+    handleOk()
+  };
+
+  const onFinishFailed = (errorInfo: any) => {
+    console.log('Failed:', errorInfo);
+  };
+
+  const editModelForm = (data: any, index: number) => {
+    setIsUpdate(true)
+    setIsModalOpen(true)
+    setEditeIndex(index)
+    modelFrom.setFieldsValue(data)
+  };
+
+
   fakeHooks.updateModelOptions = getModelOptions
 
   return (
@@ -153,6 +246,7 @@ export default function IndexPage({ projectid }: any) {
         layout="vertical"
         // initialValues={initialValues}
         onValuesChange={onChange}
+
       >
 
         <div className={styles.rowLine}>
@@ -174,7 +268,6 @@ export default function IndexPage({ projectid }: any) {
                 options={optionsModel}
               />
             </Form.Item>
-
           </Row>
         </div>
         <div className={styles.rowLine}>
@@ -393,7 +486,192 @@ export default function IndexPage({ projectid }: any) {
             </Col>
           </Row>
         </div>
+        <div className={styles.rowLine} style={{ margin: '20px 0px' }}>
+          <Space size="large" >
+            <Tooltip
+              color="pink"
+              title="How many completions to generate for each prompt."
+            >
+              <Col className={styles.title}>Funcions</Col>
+            </Tooltip>
+
+            <Button type="primary" onClick={showDrawer} >Config Functions</Button>
+          </Space>
+        </div>
+
+        <div className={styles.rowLine}>
+          <Row>
+            <Tooltip
+              color="pink"
+              title="Specify the function to execute"
+            >
+              <Col className={styles.title}>Funcion Call</Col>
+            </Tooltip>
+          </Row>
+          <Row
+            onMouseDown={(e) => e.stopPropagation()}
+            align="middle"
+          >
+            <Form.Item className={styles.formItemStyle} name="function_call" >
+              <Select
+                showSearch
+                allowClear={true}
+                options={functonsOption}
+              />
+            </Form.Item>
+          </Row>
+        </div>
       </Form>
+      <Drawer title="Functions" placement="right" size="large" onClose={onClose} open={open}>
+        <Row> <Button type="primary" onClick={showModal} >Add Function</Button></Row>
+        <br />
+        <Space wrap size="large" >
+          {console.log(JSON.stringify(dataSource.functions))}
+          {/* {dataSource.functions.map((item: any, index) => {
+            return <Card
+              key={index}
+              style={{ width: 300, padding: '10px' }}
+              cover={
+                <div style={{ height: "200px", overflow: "hidden" }}>
+                  {
+                    item.parameters ? item.parameters.map((parameter: any, parameterIndex: number) => {
+                      return <div key={parameterIndex} style={{ marginBottom: 8, padding: '5px', borderRadius: "5px", border: "1px solid #eee" }}>
+                        <div>name: {parameter.name}</div>
+                        <div>type: {parameter.type}</div>
+                        <div>description: {parameter.description}</div>
+                      </div>
+                    })
+
+                      : 'No Parameters'
+                  }
+
+                </div>
+              }
+              actions={[
+                <EditOutlined key="edit" onClick={() => { editModelForm(item, index) }} />,
+                <Popconfirm
+                  placement="bottomLeft"
+                  key="delete"
+                  title={deleteText}
+                  description={deleteDescription}
+                  onConfirm={() => {
+                    confirmDelete(index);
+                  }}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <DeleteOutlined />
+                </Popconfirm>,
+              ]}
+            >
+              <Meta
+                title={item.name}
+                description={item.description}
+              />
+            </Card>
+          })} */}
+        </Space>
+
+        <Modal title="Function" footer={null} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+          <Form
+            labelCol={{ span: 5 }}
+            wrapperCol={{ span: 14 }}
+            layout="horizontal"
+            onFinish={onFinish}
+            onFinishFailed={onFinishFailed}
+            form={modelFrom}
+          >
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: 'Missing  name' }]}
+            >
+              <Input placeholder="input placeholder" />
+            </Form.Item>
+            <Form.Item label="Description" name="description" rules={[{ required: true, message: 'Missing description' }]}>
+              <TextArea ></TextArea>
+            </Form.Item>
+
+            <Form.List name="parameters">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8, padding: '5px', borderRadius: "10px", border: "1px solid #eee" }} direction="vertical" >
+                      <MinusCircleOutlined onClick={() => remove(name)} />
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'name']}
+                        label="Name"
+                        rules={[{ required: true, message: 'Missing  name' }]}
+                      >
+                        <Input />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        label="Description"
+                        name={[name, 'description']}
+                        rules={[{ required: true, message: 'Missing description' }]}
+                      >
+                        <TextArea ></TextArea>
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        label="Type"
+                        name={[name, 'type']}
+                        rules={[{ required: true, message: 'type' }]}
+                      >
+                        <Select
+                          showSearch
+                          options={[
+                            { value: 'string', label: 'string' },
+                            { value: 'integer', label: 'integer' },
+                            { value: 'number', label: 'number' },
+                            { value: 'boolean', label: 'boolean' },
+                            { value: 'array', label: 'array' },
+                            { value: 'object', label: 'object' },
+                          ]}
+                        />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        label="enum"
+                        name={[name, 'enum']}
+                      >
+                        <Select
+                          mode="tags"
+                          style={{ width: '100%' }}
+                          placeholder="input"
+                          options={[]}
+                        />
+                      </Form.Item>
+                    </Space>
+                  ))}
+                  <Button style={{ marginBottom: "10px" }} type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                    Add Parameter
+                  </Button>
+                </>
+              )}
+            </Form.List>
+
+            {/* <Form.Item label="Required" name="required">
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ width: '100%' }}
+                placeholder="Please select"
+                defaultValue={['a10']}
+                // onChange={handleChange}
+                options={[]}
+              />
+            </Form.Item> */}
+            <Form.Item >
+              <Button htmlType="submit" type="primary">{isUpdate ? "Update" : 'Submit'}</Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+      </Drawer>
+
     </div>
   );
 }
