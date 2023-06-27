@@ -11,7 +11,10 @@ import dayjs from 'dayjs';
 import { makeNodeId } from '@/utils/withNodeId';
 import { handelhistoryFunction } from '@/utils/handelFunction';
 import { fakeHooks } from '@/stores/fakehooks';
+import { getProjectPromptList } from '@/database/prompter/prompt'
 import { piplineAllFunction, filterUsefulInfo } from '@/utils/graphUtils';
+import {history as umiHistory } from 'umi'
+import { chatToOpenaiServer } from '@/services/openai'
 const initialMessages = [
     // {
     //     type: 'text',
@@ -271,56 +274,56 @@ export default function ({ projectid }: any) {
 
     // 发送回调
     async function handleSend(type: any, val: any) {
-        if (type === 'text' && val.trim()) {
-            let newval = val
-
-            const chatbotInfo = await getProjectChatbot(projectid)
-
-            if (chatbotInfo.modify) {
-                if (type == 'text') {
-                    newval = chatbotInfo.modify.prefix + newval + chatbotInfo.modify.suffix
+            if (type === 'text' && val.trim()) {
+                let newval = val
+    
+                const chatbotInfo = await getProjectChatbot(projectid)
+    
+                if (chatbotInfo.modify) {
+                    if (type == 'text') {
+                        newval = chatbotInfo.modify.prefix + newval + chatbotInfo.modify.suffix
+                    }
+                }
+    
+    
+                const message = hzAppendMsg({
+                    content: { text: val },
+                    realContent: { text: newval },
+                    role: 'user',
+                    position: 'right'
+                })
+    
+                // console.log(chatbotInfo,1111111111)
+    
+                if (chatbotInfo.userFunctionTree) {
+                    const result = await getFunctionTreeResult(chatbotInfo.userFunctionTree, message)
+                    await pipelineResult(result)
+                    console.log(result,1111111)
+                    if (result.sendUsermessage) {
+                        setTyping(true);
+                        result.sendUsermessage.forEach((item: any) => {
+                            setTimeout(() => {
+                                hzAppendMsg({
+                                    content: item.content,
+                                    realContent: item.content,
+                                    role: 'assistant',
+                                    position: 'left',
+                                    type: item.type
+                                })
+                                setTyping(false);
+                            }, 800);
+                        })
+                    }
+    
+                    if (!result.stopGenurate) {
+                        setTyping(true);
+                        botAnswer(type, result.input ? result.input : val);
+                    }
+                }else{
+                    setTyping(true);
+                    botAnswer(type, val);
                 }
             }
-
-
-            const message = hzAppendMsg({
-                content: { text: val },
-                realContent: { text: newval },
-                role: 'user',
-                position: 'right'
-            })
-
-            console.log(chatbotInfo,1111111111)
-
-            if (chatbotInfo.userFunctionTree) {
-                const result = await getFunctionTreeResult(chatbotInfo.userFunctionTree, message)
-                await pipelineResult(result)
-                console.log(result,1111111)
-                if (result.sendUsermessage) {
-                    setTyping(true);
-                    result.sendUsermessage.forEach((item: any) => {
-                        setTimeout(() => {
-                            hzAppendMsg({
-                                content: item.content,
-                                realContent: item.content,
-                                role: 'assistant',
-                                position: 'left',
-                                type: item.type
-                            })
-                            setTyping(false);
-                        }, 800);
-                    })
-                }
-
-                if (!result.stopGenurate) {
-                    setTyping(true);
-                    botAnswer(type, result.input ? result.input : val);
-                }
-            }else{
-                setTyping(true);
-                botAnswer(type, val);
-            }
-        }
     }
 
 
@@ -363,19 +366,89 @@ export default function ({ projectid }: any) {
             newval = historyJoin + '\/n\/n' + newval
         }
 
+        if(umiHistory.location.pathname.includes('turbo')){
+            console.log(val,22222222)
+            const prompts = await getProjectPromptList(projectid)
+            const messages = prompts.active.list.map((item: any) => { return { role: item.role, content: item.message } })
 
-        completionOpenai({
-            ...parameter,
-            prompt: newval,
-        }).then(res => {
-            console.log(res)
-            hzAppendMsg({
-                content: { text: res?.data?.text.trim() },
-                realContent: { text: res?.data?.text.trim() },
-                role: 'assistant',
-                position: 'left'
+            if (!parameter.function_call) {
+                delete parameter.function_call
+            }
+            if (parameter.functions.length == 0) {
+                delete parameter.functions
+            } else {
+                parameter.functions = parameter.functions.map((item: any) => {
+    
+                    const required = item.parameters.map((parameter: any) => parameter.name)
+    
+                    const properties = {} as any
+                    item.parameters.forEach((parameter: any) => {
+                        if (parameter.enum) {
+                            properties[parameter.name] = {
+                                type: parameter.type,
+                                description: parameter.description,
+                                enum: parameter.enum,
+                            }
+                        } else {
+                            properties[parameter.name] = {
+                                type: parameter.type,
+                                description: parameter.description,
+                            }
+                        }
+    
+    
+                    })
+    
+                    return {
+                        "name": item.name,
+                        "description": item.description,
+                        "parameters": {
+                            "type": "object",
+                            "properties": properties,
+                            "required": required,
+                        },
+                    }
+    
+                })
+            }
+
+            chatToOpenaiServer({
+                "messages": messages,
+                ...parameter
+            }).then((res) => {
+                if (res) {
+                    let message = 'cant get content'
+                    if(res.data.message.content){
+                        message = res.data.message.content
+                    }else{
+                        message = JSON.stringify(res.data.message.function_call)
+                    }
+                    
+                    hzAppendMsg({
+                        content: { text: message},
+                        realContent: { text: message},
+                        role: 'assistant',
+                        position: 'left'
+                    })
+                }
             })
-        })
+
+        }else{
+            completionOpenai({
+                ...parameter,
+                prompt: newval,
+            }).then(res => {
+                console.log(res)
+                hzAppendMsg({
+                    content: { text: res?.data?.text.trim() },
+                    realContent: { text: res?.data?.text.trim() },
+                    role: 'assistant',
+                    position: 'left'
+                })
+            })
+        }
+
+        
     }
 
     // 快捷短语回调，可根据 item 数据做出不同的操作，这里以发送文本消息为例

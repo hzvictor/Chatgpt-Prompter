@@ -4,17 +4,24 @@ import {
   Space,
   Modal,
   Tour,
+  message
 } from 'antd';
 import { makeNodeId } from '@/utils/withNodeId';
 import { history, useModel } from 'umi';
 import { useState, useRef } from 'react';
 import type { TourProps } from 'antd';
+import { getProjectSlidelistList } from '@/database/prompter/slidelist'
+import { getProjectPromptList } from '@/database/prompter/prompt'
 import { messageFunction } from '@/stores/globalFunction';
 import { RedoOutlined } from '@ant-design/icons';
 import { editorLayout } from '@/stores/editors';
 import KeyTable from './keysTable'
 import PublishModal from './publishModal';
 import Setting from './setting'
+import CodeSnap from '../apureComponents/codeSnap';
+
+import { history as umiHistory } from 'umi'
+
 const layoutGrid = [
   { w: 13, h: 24, x: 5, y: 0, i: 'conversation', moved: false, static: false },
   { w: 5, h: 8, x: 0, y: 2, i: 'system', moved: false, static: false },
@@ -26,12 +33,14 @@ const layoutGrid = [
   { w: 6, h: 11, x: 18, y: 19, i: 'test', moved: false, static: false },
 ];
 
-export default function IndexPage({projectid}:any) {
+export default function IndexPage({ projectid }: any) {
   const [openGuid, setOpenGuid] = useState<boolean>(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isKeysModalOpen, setIsKeysModalOpen] = useState(false);
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [codeString, setCodeString] = useState('');
   const ref1 = useRef(null);
   const ref2 = useRef(null);
   const ref3 = useRef(null);
@@ -90,6 +99,95 @@ export default function IndexPage({projectid}:any) {
 
   const handleSettingCancel = () => {
     setIsSettingModalOpen(false);
+  };
+
+  const showCodeModal = async () => {
+    const slidelist = await getProjectSlidelistList(projectid)
+
+    let parameterString = {}
+    if (umiHistory.location.pathname.includes('turbo')) {
+      const prompts = await getProjectPromptList(projectid)
+      const messages = prompts.active.list.map((item: any) => { return { role: item.role, content: item.message } })
+      if (!slidelist.active) {
+        message.info("parameter not exist")
+        return
+      }
+      const parameter = slidelist.active.config
+
+      if (!parameter.function_call) {
+        delete parameter.function_call
+      }
+      if (parameter.functions.length == 0) {
+        delete parameter.functions
+      } else {
+        parameter.functions = parameter.functions.map((item: any) => {
+
+          const required = item.parameters.map((parameter: any) => parameter.name)
+
+          const properties = {} as any
+          item.parameters.forEach((parameter: any) => {
+            if (parameter.enum) {
+              properties[parameter.name] = {
+                type: parameter.type,
+                description: parameter.description,
+                enum: parameter.enum,
+              }
+            } else {
+              properties[parameter.name] = {
+                type: parameter.type,
+                description: parameter.description,
+              }
+            }
+
+
+          })
+
+          return {
+            "name": item.name,
+            "description": item.description,
+            "parameters": {
+              "type": "object",
+              "properties": properties,
+              "required": required,
+            },
+          }
+
+        })
+      }
+      parameterString = {
+        model: "gpt-3.5-turbo",
+        messages: messages,
+        ...parameter
+      }
+    } else {
+      const parameter = slidelist.active.config
+      parameterString = {
+        ...parameter
+      }
+    }
+
+
+
+    setCodeString(
+      `const { Configuration, OpenAIApi } = require("openai");
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+const completion = await openai.createChatCompletion(${JSON.stringify(parameterString)});
+console.log(completion.data.choices[0].message);
+`)
+    setIsCodeModalOpen(true);
+  };
+
+  const handleCodeOk = () => {
+
+    setIsCodeModalOpen(false);
+  };
+
+  const handleCodeCancel = () => {
+    setIsCodeModalOpen(false);
   };
 
   const showKeysModal = () => {
@@ -164,6 +262,15 @@ export default function IndexPage({projectid}:any) {
           >
             Publish
           </Button>
+
+          <Button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={showCodeModal}
+            shape="round"
+            type="primary"
+          >
+            View Code
+          </Button>
         </Space>
 
         <Modal
@@ -208,7 +315,19 @@ export default function IndexPage({projectid}:any) {
         >
           <Setting projectid={projectid}></Setting>
         </Modal>
-        
+
+        <Modal
+          title="Code"
+          open={isCodeModalOpen}
+          width={600}
+          footer={null}
+          onOk={handleCodeOk}
+          onCancel={handleCodeCancel}
+          destroyOnClose={true}
+        >
+          <CodeSnap lang="javascript" codeString={codeString}  ></CodeSnap>
+        </Modal>
+
         <Tour
           open={openGuid}
           onClose={() => setOpenGuid(false)}

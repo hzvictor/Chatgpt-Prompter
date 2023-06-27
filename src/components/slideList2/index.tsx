@@ -27,17 +27,15 @@ export default function IndexPage({ projectid }: any) {
   const [open, setOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [functonsOption, setFunctionsOption ] = useState([
-    { value: 'gpt-3.5-turbo-0613', label: 'gpt-3.5-turbo-0613' },
-    { value: 'gpt-3.5-turbo-0301', label: 'gpt-3.5-turbo-0301' },
+    { value: 'none', label: 'None' },
   ])
   const [tableInfo, setTableInfo] = useState({
     nanoid: '',
     name: 'Parameter',
-    isActive: true,
-    config: {}
+    isActive: true
   })
   const [dataSource, setDataSource] = useState({
-    model: 'davinci',
+    model: 'gpt-3.5-turbo',
     temperature: 1,
     max_tokens: 100,
     top_p: 1,
@@ -59,12 +57,21 @@ export default function IndexPage({ projectid }: any) {
   const updateFromConfig = () => {
     getProjectSlidelistList(projectid).then(res => {
       if (res.all.length == 0) {
-        newSlidelist('Parameter', projectid,).then((id: any) => {
+        newSlidelist('Parameter', projectid,{
+          model: 'gpt-3.5-turbo',
+          temperature: 1,
+          max_tokens: 100,
+          top_p: 1,
+          n: 1,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+          functions: [],
+          function_call: '',
+        }).then((id: any) => {
           setTableInfo({
             nanoid: id,
             name: 'Parameter',
             isActive: true,
-            // config:dataSource
           })
           setAllDataSource([
             {
@@ -114,6 +121,17 @@ export default function IndexPage({ projectid }: any) {
       form.setFieldsValue({
         ...dataSource,
       })
+
+      const functions = dataSource.functions.map((item:any)=>{
+        return {
+              value: item.name, label:  item.name
+        }
+      })  
+
+      setFunctionsOption([
+    { value: 'none', label: 'None' },
+  ].concat(functions))
+
       if (tableInfo.nanoid) {
         updateSlidelistDetail(tableInfo.nanoid, { config: dataSource })
       }
@@ -125,6 +143,7 @@ export default function IndexPage({ projectid }: any) {
 
   const onChange = () => {
     const config = form.getFieldsValue()
+    config.functions = dataSource.functions
     if (tableInfo.nanoid) {
       updateSlidelistDetail(tableInfo.nanoid, { config: config })
     }
@@ -132,7 +151,17 @@ export default function IndexPage({ projectid }: any) {
 
 
   const addNewTab = async () => {
-    const id = await newSlidelist(`Parameter ${allDataSource.length}`, projectid,)
+    const id = await newSlidelist(`Parameter ${allDataSource.length}`,projectid,{
+      model: 'davinci',
+      temperature: 1,
+      max_tokens: 100,
+      top_p: 1,
+      n: 1,
+      presence_penalty: 0,
+      frequency_penalty: 0,
+      functions: [],
+      function_call: '',
+    })
     await updateActiveSlidelist(projectid, id)
     await updateFromConfig()
     return id
@@ -199,6 +228,13 @@ export default function IndexPage({ projectid }: any) {
   };
 
   const onFinish = (values: any) => {
+
+    console.log(values)
+    if(!values.parameters){
+      message.error("at least one parameter")
+      return
+    }
+
     const newDataSource = JSON.parse(JSON.stringify(dataSource))
     if(isUpdate){
       newDataSource.functions[editeIndex] = values
@@ -526,8 +562,7 @@ export default function IndexPage({ projectid }: any) {
         <Row> <Button type="primary" onClick={showModal} >Add Function</Button></Row>
         <br />
         <Space wrap size="large" >
-          {console.log(JSON.stringify(dataSource.functions))}
-          {/* {dataSource.functions.map((item: any, index) => {
+          {dataSource.functions.map((item: any, index) => {
             return <Card
               key={index}
               style={{ width: 300, padding: '10px' }}
@@ -569,7 +604,7 @@ export default function IndexPage({ projectid }: any) {
                 description={item.description}
               />
             </Card>
-          })} */}
+          })}
         </Space>
 
         <Modal title="Function" footer={null} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>

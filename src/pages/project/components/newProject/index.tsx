@@ -111,8 +111,8 @@ const App: React.FC = ({ onCancel, projectInfo }: any) => {
 
                             <Radio.Group disabled={projectInfo.type}>
                                 <Radio.Button value="chatbot">Chatbot</Radio.Button>
-                                <Radio.Button value="plugin">Browser Plug-in</Radio.Button>
-                                <Radio.Button value="reader">PDF Reader</Radio.Button>
+                                <Radio.Button disabled value="plugin">Browser Plug-in</Radio.Button>
+                                <Radio.Button disabled value="reader">PDF Reader</Radio.Button>
                             </Radio.Group>
 
                         </Form.Item>
@@ -126,8 +126,8 @@ const App: React.FC = ({ onCancel, projectInfo }: any) => {
                             rules={[{ required: true, message: 'Please select model' }]}
                         >
                             <Radio.Group disabled={projectInfo.type}>
-                                <Radio.Button value="turbo">Turbo</Radio.Button>
                                 <Radio.Button value="davinaci">Davinaci</Radio.Button>
+                                <Radio.Button value="turbo">Turbo</Radio.Button>
                             </Radio.Group>
                         </Form.Item>
                     </Col>

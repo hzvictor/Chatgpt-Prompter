@@ -322,6 +322,7 @@ const App = ({ projectid }: any) => {
                 render: (_, record: any) => {
 
 
+                    // return <Space>{record.role == 'assistant' && _ == '' && <Button onClick={(event) => { genrateContent(event, record) }} type="primary"  > {record.state} Generate </Button>}{_}</Space>
                     return <Space>{record.role == 'assistant' && _ == '' && <Button loading={record.state == 'loading'} onClick={(event) => { genrateContent(event, record) }} type="primary"  > {record.state} Generate </Button>}{_}</Space>
                 }
             },
@@ -359,11 +360,58 @@ const App = ({ projectid }: any) => {
         }
         const parameter = slidelist.active.config
 
+        if (parameter.model == "gpt-3.5-turbo") {
+            message.error("gpt-3.5-turbo cant use function")
+            return
+        }
+
         const targeIndex = dataSource.findIndex((item: any) => item.key == recode.key)
         const messages = dataSource.map((item: any) => { return { role: item.role, content: item.message } })
         const newDataSource = JSON.parse(JSON.stringify(dataSource))
         newDataSource[targeIndex].state = 'loading'
         setDataSource(newDataSource)
+
+        if (!parameter.function_call) {
+            delete parameter.function_call
+        }
+        if (parameter.functions.length == 0) {
+            delete parameter.functions
+        } else {
+            parameter.functions = parameter.functions.map((item: any) => {
+
+                const required = item.parameters.map((parameter: any) => parameter.name)
+
+                const properties = {} as any
+                item.parameters.forEach((parameter: any) => {
+                    if (parameter.enum) {
+                        properties[parameter.name] = {
+                            type: parameter.type,
+                            description: parameter.description,
+                            enum: parameter.enum,
+                        }
+                    } else {
+                        properties[parameter.name] = {
+                            type: parameter.type,
+                            description: parameter.description,
+                        }
+                    }
+
+
+                })
+
+                return {
+                    "name": item.name,
+                    "description": item.description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": properties,
+                        "required": required,
+                    },
+                }
+
+            })
+        }
+
 
         chatToOpenaiServer({
             "messages": messages,
@@ -371,7 +419,12 @@ const App = ({ projectid }: any) => {
         }).then((res) => {
             if (res) {
                 const newDataSource = JSON.parse(JSON.stringify(dataSource))
-                newDataSource[targeIndex].message = res.data.message.content
+                if(res.data.message.content){
+                    newDataSource[targeIndex].message = res.data.message.content
+                }else{
+                    newDataSource[targeIndex].message = JSON.stringify(res.data.message.function_call)
+                }
+                
                 newDataSource[targeIndex].state = 'done'
                 setDataSource(newDataSource)
             }

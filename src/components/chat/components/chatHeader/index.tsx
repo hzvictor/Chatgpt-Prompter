@@ -1,6 +1,6 @@
 import styles from './index.less';
 import { SettingOutlined, ShareAltOutlined, RightOutlined, RedoOutlined } from '@ant-design/icons';
-import { Drawer, Row, Col, Button, Tooltip } from 'antd';
+import { Drawer, Row, Col, Button, Tooltip, message } from 'antd';
 import { useEffect, useState } from 'react';
 import ModifyString from '../modifyString';
 import BaseSetting from '../baseSetting';
@@ -9,6 +9,7 @@ import { updateChatbotDetail } from '@/database/prompter/chatbot'
 import CodeEditor from '@/components/apureComponents/codeEditor';
 import { removeJavascriptComments } from '@/utils/little'
 import { getTargetFunctions } from '@/database/prompter/function'
+import {history as umiHistory } from 'umi'
 export default ({ chatbotInfo, resetList, setHistory }: any) => {
   const [open, setOpen] = useState(false);
   const [openCode, setOpenCode] = useState(false);
@@ -54,7 +55,12 @@ export default ({ chatbotInfo, resetList, setHistory }: any) => {
 
 
   const jumpToBotEditor = () => {
-    history.push(`/editor/graph/chatbot/${chatbotInfo.projectid}`);
+    if(umiHistory.location.pathname.includes('turbo')){
+      message.info('turbo does not support drag and drop configuration')
+    }else{
+      history.push(`/editor/graph/chatbot/${chatbotInfo.projectid}`);
+    }
+
   };
 
   const resetHistory = () => {

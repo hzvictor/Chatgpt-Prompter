@@ -83,6 +83,7 @@ export async function deleteSlidelist(nanoid: string) {
 export async function newSlidelist(
     name: string = 'unknow',
     projectid:string,
+    config:any = {},
 
 ) {
     try {
@@ -91,7 +92,7 @@ export async function newSlidelist(
             nanoid:id,
             name: name,
             projectid: projectid,
-            config:{},
+            config:config,
             isActive:true,
             creatData: dayjs().valueOf(),
             updateDate: dayjs().valueOf(),
