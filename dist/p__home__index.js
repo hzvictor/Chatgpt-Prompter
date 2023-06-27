@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([[15],{FCkD:function(n,e,t){"use strict";t.r(e);var s=t("nKUr");e["default"]=()=>Object(s["jsx"])(s["Fragment"],{children:"test"})}}]);

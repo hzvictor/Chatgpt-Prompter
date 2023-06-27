@@ -91,8 +91,8 @@ request.interceptors.request.use((url, options) => {
     };
   } else {
     return {
-      // url: `https://test.server.prompterhub.com/api${url}`,
-      url: `http://localhost:1336/api${url}`,
+      url: `https://test.server.prompterhub.com/api${url}`,
+      // url: `http://localhost:1336/api${url}`,
       options: { ...newOptions, headers },
     };
   }
