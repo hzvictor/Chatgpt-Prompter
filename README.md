@@ -10,6 +10,13 @@
 
 ## ✨ Demo
 <p >
+  <a href="https://dev.prompterhub.com">
+   Prompter Hub
+  </a>
+</p>
+
+## ✨ Old Demo
+<p >
   <a href="https://test.prompterhub.com">
    Prompter Hub
   </a>
