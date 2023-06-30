@@ -67,7 +67,6 @@ yarn start
 ```
 ## 🔨 New Usage
 [![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screen-Recording-2023-06-29-at-9.52.59-PM.gif)](https://dev.prompterhub.com)
-[![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screen-Recording-2023-06-29-at-9.54.48-PM.gif)](https://dev.prompterhub.com)
 
 ## 🔨 Old Usage
 [![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screen%20Recording%202023-04-25%20at%203.50.35%20PM.gif)](https://test.prompterhub.com)
