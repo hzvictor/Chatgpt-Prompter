@@ -4,9 +4,9 @@
 
 
 
-[![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screenshot%202023-04-25%20at%203.30.12%20PM.png)](https://test.prompterhub.com)
+[![](https://prompterhub.oss-us-east-1.aliyuncs.com/Blank%208%20Grids%20Collage.png)](https://dev.prompterhub.com)
 
-[![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screenshot%202023-04-25%20at%203.30.23%20PM.png)](https://test.prompterhub.com)
+[![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screenshot%202023-04-25%20at%203.30.23%20PM.png)](https://dev.prompterhub.com)
 
 ## ✨ Demo
 <p >
@@ -37,6 +37,9 @@ I divided the prompt of the chat3.5 modle into four levels.
 - history This refers to the history in the chat, you can selectively record which chat records are used to enter the history queue, and you can also reset the history during the chat.
 - modify This is the prompt with the highest weight, which can be written directly before and after the user input.
 
+### Fine-tuning
+Fine-tuning is a technique to further train a model based on a pre-trained model to adapt to a specific task or domain. In order to increase the interactivity of Fine-tuning and make it easier to train your own model.
+
 ### drag and drop editing
 
 The dendrogram edited by the user will be calculated as two pieces of data, one is the json tree, which contains the relationship between each node. The other is the function map, which contains the function of each node.
@@ -46,6 +49,7 @@ When multiple branches can match the current state, the code merges the executio
 ## ✨ Features
 
 -  Basic functions of the playground.
+-  Fine-tuning.
 -  Synchronously generate multiple assistant messages.
 -  Multiple messages can be tested.
 -  Drag and drop edit switch prompt.
@@ -65,8 +69,6 @@ yarn start
 ## 🔨 Usage
 
 [![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screen%20Recording%202023-04-25%20at%203.50.35%20PM.gif)](https://test.prompterhub.com)
-
-[![](https://prompterhub.oss-us-east-1.aliyuncs.com/Screenshot%202023-04-25%20at%203.37.56%20PM.png)](https://test.prompterhub.com)
 
 ### TypeScript
 
